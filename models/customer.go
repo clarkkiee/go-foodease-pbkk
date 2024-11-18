@@ -13,7 +13,7 @@ type Customer struct {
 	Email          string     `json:"email"`
 	FirstName      string     `json:"first_name"`
 	LastName       string     `json:"last_name"`
-	Password       string     `json:"customer_password"`
+	Password       string     `gorm:"column:customer_password" json:"password"`
 	ActiveAddressId *uuid.UUID `gorm:"type:uuid;default:null" json:"active_address_id"`
 	CreatedAt      time.Time  `json:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at"`
