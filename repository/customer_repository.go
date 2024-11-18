@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"go-foodease-be/models"
 
 	"gorm.io/gorm"
@@ -12,6 +13,7 @@ type (
 		// RegisterCustomer(ctx context.Context, tx *gorm.DB, customer models.Customer) (models.Customer, error)
 		GetCustomerById(ctx context.Context, tx *gorm.DB, customerId string) (models.Customer, error)
 		GetCustomerByEmail(ctx context.Context, tx *gorm.DB, email string) (models.Customer, error)
+		CheckEmail(ctx context.Context, tx *gorm.DB, email string) (models.Customer, bool, error)
 	}
 
 	customerRepository struct {
@@ -55,4 +57,20 @@ func (r *customerRepository) GetCustomerByEmail(ctx context.Context, tx *gorm.DB
 	}
 
 	return customer, nil
+}
+
+func (r *customerRepository) CheckEmail(ctx context.Context, tx *gorm.DB, email string) (models.Customer, bool, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var customer models.Customer
+	if err := tx.WithContext(ctx).Where("email = ?", email).Take(&customer).Error; err != nil {
+		return models.Customer{}, false, err
+	}
+
+	fmt.Println("repos: ", customer.Password )
+	fmt.Println("repos: ", customer.ID )
+
+	return customer, true, nil
 }

@@ -17,8 +17,9 @@ func main() {
 	db := config.DatabaseConnection()
 
 	var (
+		jwtService service.JWTService = service.NewJWTService()
 		customerRepository repository.CustomerRepository = repository.NewCustomerRepository(db)
-		customerService service.CustomerService = service.NewCustomerService(customerRepository)
+		customerService service.CustomerService = service.NewCustomerService(customerRepository, jwtService)
 		customerController controller.CustomerController = controller.NewCustomerController(customerService)
 	)
 

@@ -10,5 +10,6 @@ func Customer(route *gin.Engine, customerController controller.CustomerControlle
 	routes := route.Group("/api/customer")
 	{
 		routes.GET("/me", customerController.Me)
+		routes.POST("/login", customerController.Login)
 	}
 }
