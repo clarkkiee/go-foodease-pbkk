@@ -13,5 +13,6 @@ func Customer(route *gin.Engine, customerController controller.CustomerControlle
 	{
 		routes.GET("/me", middleware.Authenticate(jwtService),customerController.Me)
 		routes.POST("/login", customerController.Login)
+		routes.POST("/register", customerController.Register)
 	}
 }
