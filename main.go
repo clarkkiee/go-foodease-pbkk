@@ -25,7 +25,7 @@ func main() {
 
 	server := gin.Default()
 
-	routes.Customer(server, customerController)
+	routes.Customer(server, customerController, jwtService)
 
 	server.Static("/assets", "./assets")
 	port := os.Getenv("PORT")

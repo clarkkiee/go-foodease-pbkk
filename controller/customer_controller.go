@@ -28,13 +28,11 @@ func NewCustomerController(cs service.CustomerService) CustomerController {
 }
 
 func (c *customerController) Me(ctx *gin.Context) {
-	// customerId := ctx.MustGet("customer_id").(string)
-	customerId := "f577a67f-e6eb-46c0-866e-3fde4eaa185a"
+	customerId := ctx.MustGet("id").(string)	
 	customer, err := c.customerService.GetCustomerById(ctx.Request.Context(), customerId)
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	ctx.JSON(200, customer)
 }
 
