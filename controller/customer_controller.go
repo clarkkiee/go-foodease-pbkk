@@ -14,6 +14,7 @@ type (
 	CustomerController interface {
 		Me(ctx *gin.Context)
 		Login(ctx *gin.Context)
+		Register(ctx *gin.Context)
 	}
 
 	customerController struct {
@@ -53,4 +54,24 @@ func (c *customerController) Login(ctx *gin.Context){
 
 		response := utils.BuildSuccessResponse("login success", res)
 		ctx.JSON(http.StatusOK, response)
+}
+
+func (c *customerController) Register(ctx *gin.Context) {
+	var customer dto.CustomerRegisterRequest
+	if err := ctx.ShouldBind(&customer); err != nil {
+		response := utils.BuildFailedResponse("Failed Get Data From Body", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	res, err := c.customerService.Register(ctx.Request.Context(), customer)
+	fmt.Println("err ctrl", err)
+	if err != nil {
+		response := utils.BuildFailedResponse("Failed Register Customer", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return 
+	}
+
+	response := utils.BuildSuccessResponse("Customer Registered Successfully", res)
+	ctx.JSON(http.StatusOK, response)
 }

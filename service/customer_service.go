@@ -2,14 +2,17 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"go-foodease-be/dto"
 	"go-foodease-be/helpers"
+	"go-foodease-be/models"
 	"go-foodease-be/repository"
 )
 
 type (
 	CustomerService interface {
+		Register(ctx context.Context, req dto.CustomerRegisterRequest) (dto.CustomerResponse, error)
 		GetCustomerById(ctx context.Context, customerId string) (dto.CustomerResponse, error)
 		GetCustomerByEmail(ctx context.Context, email string) (dto.CustomerResponse, error)
 		VerifyLogin(ctx context.Context, req dto.CustomerLoginRequest) (dto.CustomerLoginResponse, error)
@@ -76,5 +79,33 @@ func (s *customerService) VerifyLogin(ctx context.Context, req dto.CustomerLogin
 	return dto.CustomerLoginResponse{
 		Token: token,
 		ID: cust.ID.String(),
+	}, nil
+}
+
+func (s *customerService) Register(ctx context.Context, req dto.CustomerRegisterRequest) (dto.CustomerResponse, error) {
+	_, flag, _ := s.customerRepo.CheckEmail(ctx, nil, req.Email)
+	if flag {
+		return dto.CustomerResponse{}, errors.New("email already exist")
+	}
+
+	newCustomer := models.Customer{
+		Email: req.Email,
+		FirstName: req.FirstName,
+		LastName: req.LastName,
+		Password: req.Password,
+		ActiveAddressId: nil,
+	}
+
+	custReg, err := s.customerRepo.RegisterCustomer(ctx, nil, newCustomer)
+	if err != nil {
+		return dto.CustomerResponse{}, err
+	}
+
+	return dto.CustomerResponse{
+		ID: custReg.ID,
+		Email: custReg.Email,
+		FirstName: custReg.FirstName,
+		LastName: custReg.LastName,
+		ActiveAddressId: custReg.ActiveAddressId,
 	}, nil
 }
