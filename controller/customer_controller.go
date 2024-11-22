@@ -15,6 +15,7 @@ type (
 		Me(ctx *gin.Context)
 		Login(ctx *gin.Context)
 		Register(ctx *gin.Context)
+		DeleteAccount(ctx *gin.Context)
 	}
 
 	customerController struct {
@@ -73,5 +74,18 @@ func (c *customerController) Register(ctx *gin.Context) {
 	}
 
 	response := utils.BuildSuccessResponse("Customer Registered Successfully", res)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (c *customerController) DeleteAccount(ctx *gin.Context) {
+	customerId := ctx.MustGet("id").(string)
+	err := c.customerService.DeleteAccount(ctx.Request.Context(), customerId)
+	if err != nil {
+		response := utils.BuildFailedResponse("failed to delete account", err.Error(), nil)
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := utils.BuildSuccessResponse("success to delete account", nil)
 	ctx.JSON(http.StatusOK, response)
 }

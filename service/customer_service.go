@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"go-foodease-be/dto"
 	"go-foodease-be/helpers"
 	"go-foodease-be/models"
@@ -16,6 +15,7 @@ type (
 		GetCustomerById(ctx context.Context, customerId string) (dto.CustomerResponse, error)
 		GetCustomerByEmail(ctx context.Context, email string) (dto.CustomerResponse, error)
 		VerifyLogin(ctx context.Context, req dto.CustomerLoginRequest) (dto.CustomerLoginResponse, error)
+		DeleteAccount(ctx context.Context, id string) error
 	}
 
 	customerService struct {
@@ -67,7 +67,6 @@ func (s *customerService) VerifyLogin(ctx context.Context, req dto.CustomerLogin
 		return dto.CustomerLoginResponse{}, err
 	}
 	
-	fmt.Printf("in DB: %v\n", cust)
 	checkPassword, err := helpers.ValidatePassword(req.Password, cust.Password)
 	if err != nil || !checkPassword {
 		return dto.CustomerLoginResponse{}, err
@@ -108,4 +107,13 @@ func (s *customerService) Register(ctx context.Context, req dto.CustomerRegister
 		LastName: custReg.LastName,
 		ActiveAddressId: custReg.ActiveAddressId,
 	}, nil
+}
+
+func (s *customerService) DeleteAccount(ctx context.Context, id string) error {
+	err := s.customerRepo.DeleteAccount(ctx, nil, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

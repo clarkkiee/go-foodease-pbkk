@@ -4,6 +4,7 @@ import (
 	"context"
 	"go-foodease-be/models"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -13,6 +14,7 @@ type (
 		GetCustomerById(ctx context.Context, tx *gorm.DB, customerId string) (models.Customer, error)
 		GetCustomerByEmail(ctx context.Context, tx *gorm.DB, email string) (models.Customer, error)
 		CheckEmail(ctx context.Context, tx *gorm.DB, email string) (models.Customer, bool, error)
+		DeleteAccount(ctx context.Context, tx *gorm.DB, id string) error
 	}
 
 	customerRepository struct {
@@ -79,4 +81,16 @@ func (r *customerRepository) CheckEmail(ctx context.Context, tx *gorm.DB, email 
 	}
 
 	return customer, true, nil
+}
+
+func (r *customerRepository) DeleteAccount(ctx context.Context, tx *gorm.DB, id string) error {
+	if tx == nil {
+		tx = r.db
+	}
+
+	if err := tx.WithContext(ctx).Delete(&models.Customer{}, uuid.MustParse(id)).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
