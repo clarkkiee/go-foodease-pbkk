@@ -1,0 +1,16 @@
+package routes
+
+import (
+	"go-foodease-be/controller"
+	"go-foodease-be/middleware"
+	"go-foodease-be/service"
+
+	"github.com/gin-gonic/gin"
+)
+
+func Address(route *gin.Engine, addressController controller.AddressController, jwtService service.JWTService) {
+	routes := route.Group("/api/address")
+	{
+		routes.POST("/new", middleware.Authenticate(jwtService) ,addressController.CreateNewAddress)
+	}
+}

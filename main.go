@@ -21,11 +21,16 @@ func main() {
 		customerRepository repository.CustomerRepository = repository.NewCustomerRepository(db)
 		customerService service.CustomerService = service.NewCustomerService(customerRepository, jwtService)
 		customerController controller.CustomerController = controller.NewCustomerController(customerService)
+
+		addressRepository repository.AddressRepository = repository.NewAddressRepository(db)
+		addressService service.AddressService = service.NewAddressService(addressRepository, jwtService)
+		addressController controller.AddressController = controller.NewAddressController(addressService)
 	)
 
 	server := gin.Default()
 
 	routes.Customer(server, customerController, jwtService)
+	routes.Address(server,addressController, jwtService)
 
 	server.Static("/assets", "./assets")
 	port := os.Getenv("PORT")
