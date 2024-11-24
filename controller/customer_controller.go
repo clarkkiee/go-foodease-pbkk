@@ -82,7 +82,7 @@ func (c *customerController) DeleteAccount(ctx *gin.Context) {
 	err := c.customerService.DeleteAccount(ctx.Request.Context(), customerId)
 	if err != nil {
 		response := utils.BuildFailedResponse("failed to delete account", err.Error(), nil)
-		ctx.JSON(http.StatusInternalServerError, response)
+		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
 

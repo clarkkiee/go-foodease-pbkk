@@ -110,6 +110,12 @@ func (s *customerService) Register(ctx context.Context, req dto.CustomerRegister
 }
 
 func (s *customerService) DeleteAccount(ctx context.Context, id string) error {
+
+	_, v_err := s.customerRepo.GetCustomerById(ctx, nil, id)
+	if v_err != nil {
+		return v_err
+	}
+
 	err := s.customerRepo.DeleteAccount(ctx, nil, id)
 	if err != nil {
 		return err
