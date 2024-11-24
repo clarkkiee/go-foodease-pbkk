@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -20,25 +22,36 @@ func (c Coordinates) GormDataType() string {
 
 func (c Coordinates) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	return clause.Expr{
-		SQL: "ST_PointFromText(?)",
-		Vars: []interface{}{fmt.Sprintf("POINT(%f %f)", c.Longitude, c.Latitude)},
+		SQL: "ST_SetSRID(ST_Point(?, ?), 4326)", // Use SRID 4326 for WGS84
+		Vars: []interface{}{
+			c.Longitude,
+			c.Latitude,
+		},
 	}
 }
 
 func (c *Coordinates) Scan(value interface{}) error {
-	str, ok := value.(string)
-	if !ok {
-		return fmt.Errorf("failed to scan coordinates: invalid data type %T", value)
-	}
+	switch v := value.(type) {
+	case []byte: // WKB format
+		// Convert WKB to WKT using PostGIS functions in SQL (recommended)
+		return fmt.Errorf("WKB parsing not implemented. Use ST_AsText(coordinates) in your SQL query")
 
-	// Parse nilai dari WKT (Well-Known Text)
-	_, err := fmt.Sscanf(str, "POINT(%f %f)", &c.Longitude, &c.Latitude)
-	if err != nil {
-		return fmt.Errorf("failed to parse POINT: %v", err)
+	case string: // WKT format: "POINT(longitude latitude)"
+		str := strings.TrimSpace(v)
+		re := regexp.MustCompile(`POINT\(([-\d.]+) ([-\d.]+)\)`)
+		matches := re.FindStringSubmatch(str)
+		if len(matches) != 3 {
+			return fmt.Errorf("invalid WKT format: %s", str)
+		}
+		fmt.Sscanf(matches[1], "%f", &c.Longitude)
+		fmt.Sscanf(matches[2], "%f", &c.Latitude)
+		return nil
+
+	default:
+		return fmt.Errorf("unsupported data type: %T", value)
 	}
-	return nil
 }
 
 func (c Coordinates) Value() (driver.Value, error) {
-	return fmt.Sprintf("POINT(%f %f)", c.Longitude, c.Latitude), nil
+	return fmt.Sprintf("SRID=4326;POINT(%f %f)", c.Longitude, c.Latitude), nil
 }
