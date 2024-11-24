@@ -14,6 +14,8 @@ import (
 type (
 	AddressService interface {
 		CreateNewAddress(ctx context.Context, req dto.CreateNewAddressRequest, id string) (dto.AddressResponse, error)
+		GetAllAddressByCustomerId(ctx context.Context, id string) ([]dto.AddressResponse, error)
+		GetAddressById(ctx context.Context, addressId string, customerId string) (dto.AddressResponse, error)
 	}
 
 	addressService struct {
@@ -58,4 +60,22 @@ func (s *addressService) CreateNewAddress(ctx context.Context, req dto.CreateNew
 		UpdatedAt: res.UpdatedAt,
 	}, nil
 
+}
+
+func (s *addressService) GetAllAddressByCustomerId(ctx context.Context, customerId string) ([]dto.AddressResponse, error){
+	addresses, err := s.addressRepo.GetAllAddressByCustomerId(ctx, nil, customerId)	
+	if err != nil {
+		return []dto.AddressResponse{}, err
+	}
+
+	return addresses, nil
+}
+
+func (s *addressService) GetAddressById(ctx context.Context, addressId string, customerId string) (dto.AddressResponse, error){
+	addr, err := s.addressRepo.GetAddressById(ctx, nil, addressId, customerId)
+	if err != nil {
+		return dto.AddressResponse{}, err
+	}
+
+	return addr, nil
 }

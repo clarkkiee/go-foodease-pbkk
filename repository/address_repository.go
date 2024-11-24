@@ -9,10 +9,12 @@ import (
 	"go-foodease-be/models"
 	"go-foodease-be/types"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -20,6 +22,8 @@ type (
 	AddressRepository interface {
 		ProduceCordFromText(ctx context.Context, tx *gorm.DB, street string) (*types.Coordinates, error)
 		CreateAddress(ctx context.Context, tx *gorm.DB, address models.Address) (models.Address, error)
+		GetAllAddressByCustomerId(ctx context.Context, tx *gorm.DB, customerId string) ([]dto.AddressResponse, error)
+		GetAddressById(ctx context.Context, tx *gorm.DB, addressId string, customerId string) (dto.AddressResponse, error)
 	}
 
 	addressRepository struct {
@@ -76,4 +80,71 @@ func (r *addressRepository) CreateAddress(ctx context.Context, tx *gorm.DB, addr
 	}
 
 	return address, nil
+}
+
+func (r *addressRepository) GetAllAddressByCustomerId(ctx context.Context, tx *gorm.DB, customerId string) (addrResp []dto.AddressResponse, error error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var addresses []models.Address
+
+	err := tx.Raw(`SELECT id,
+    street,
+	ST_AsText(coordinates) AS coordinates,
+    created_at,
+    updated_at
+	FROM addresses
+	WHERE customer_id = ?`, customerId).Scan(&addresses).Error
+
+	if err != nil {
+		log.Fatalf("Error fetching addresses: %v", err)
+	}
+
+	for _, address := range addresses {
+		addrResp = append(addrResp, dto.AddressResponse{
+			ID: address.ID,
+			Street: address.Street,
+			Longitude: address.Coordinates.Longitude,
+			Latitude: address.Coordinates.Latitude,
+			CreatedAt: address.CreatedAt,
+			UpdatedAt: address.UpdatedAt,
+		})
+	}
+	return addrResp, nil
+}
+
+func (r *addressRepository) GetAddressById(ctx context.Context, tx *gorm.DB, addressId string, customerId string) (dto.AddressResponse, error){
+	if tx == nil {
+		tx = r.db
+	}
+
+	var address models.Address
+	
+	err := tx.Raw(`SELECT id,
+    street,
+	ST_AsText(coordinates) AS coordinates,
+    created_at,
+    updated_at
+	FROM addresses
+	WHERE id = ?`, addressId).Scan(&address).Error
+
+	if err != nil {
+		return dto.AddressResponse{}, err
+	}
+
+	if address.CustomerID != uuid.MustParse(customerId) {
+		return dto.AddressResponse{}, errors.New("unauthorized to fetch another user address")
+	}
+
+	resp := dto.AddressResponse{
+		ID: address.ID,
+		Street: address.Street,
+		Longitude: address.Coordinates.Longitude,
+		Latitude: address.Coordinates.Latitude,
+		CreatedAt: address.CreatedAt,
+		UpdatedAt: address.UpdatedAt,
+	}
+
+	return resp, nil
 }

@@ -12,5 +12,7 @@ func Address(route *gin.Engine, addressController controller.AddressController, 
 	routes := route.Group("/api/address")
 	{
 		routes.POST("/new", middleware.Authenticate(jwtService) ,addressController.CreateNewAddress)
+		routes.GET("/all", middleware.Authenticate(jwtService), addressController.GetAllAddressByCustomerId)
+		routes.GET("/:address_id", middleware.Authenticate(jwtService), addressController.GetAdrressById)
 	}
-}
+}	

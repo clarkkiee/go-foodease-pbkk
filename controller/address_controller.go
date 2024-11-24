@@ -13,6 +13,8 @@ import (
 type (
 	AddressController interface {
 		CreateNewAddress(ctx *gin.Context)
+		GetAllAddressByCustomerId(ctx *gin.Context)
+		GetAdrressById(ctx *gin.Context)
 	}
 
 	addressController struct {
@@ -52,5 +54,44 @@ func (c *addressController) CreateNewAddress(ctx *gin.Context){
 
 	response := utils.BuildSuccessResponse("success creating new address", addr)
 	ctx.JSON(http.StatusOK, response)
+}
 
+func (c *addressController) GetAllAddressByCustomerId(ctx *gin.Context){
+	customerId := ctx.MustGet("id").(string)
+	if customerId == "" {
+		response := utils.BuildFailedResponse("fetch address failed", errors.New("cannot identified user"), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	addresses, err := c.addressService.GetAllAddressByCustomerId(ctx.Request.Context(), customerId)
+	if err != nil {
+		response := utils.BuildFailedResponse("fetch address failed", err.Error(), nil)
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := utils.BuildSuccessResponse("fetch address successful", addresses)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (c *addressController) GetAdrressById(ctx *gin.Context){
+	customerId := ctx.MustGet("id").(string)
+	addressId := ctx.Param("address_id")
+	
+	if addressId == "" {
+		response := utils.BuildFailedResponse("failed process request", errors.New("must specify address_id"), nil)
+		ctx.JSON(http.StatusBadGateway, response)
+		return
+	}
+
+	addr, err := c.addressService.GetAddressById(ctx.Request.Context(), addressId, customerId)
+	if err != nil {
+		response := utils.BuildFailedResponse("failed process request", errors.New("failed to get address"), nil)
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := utils.BuildSuccessResponse("fetch address successfully", addr)
+	ctx.JSON(http.StatusOK, response)
 }
