@@ -15,6 +15,8 @@ type (
 		CreateNewAddress(ctx *gin.Context)
 		GetAllAddressByCustomerId(ctx *gin.Context)
 		GetAdrressById(ctx *gin.Context)
+		UpdateAddressById(ctx *gin.Context)
+		DeleteAddressById(ctx *gin.Context)
 	}
 
 	addressController struct {
@@ -87,11 +89,60 @@ func (c *addressController) GetAdrressById(ctx *gin.Context){
 
 	addr, err := c.addressService.GetAddressById(ctx.Request.Context(), addressId, customerId)
 	if err != nil {
-		response := utils.BuildFailedResponse("failed process request", errors.New("failed to get address"), nil)
+		response := utils.BuildFailedResponse("failed process request", err.Error(), nil)
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
 
 	response := utils.BuildSuccessResponse("fetch address successfully", addr)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (c *addressController) UpdateAddressById(ctx *gin.Context) {
+	customerId := ctx.MustGet("id").(string)
+	addressId := ctx.Param("address_id")
+
+	if customerId == "" {
+		response := utils.BuildFailedResponse("failed to update address", errors.New("cannot identified user"), nil)
+		ctx.JSON(http.StatusUnauthorized, response)
+		return
+	}
+
+	var address dto.CreateNewAddressRequest
+	
+	if err := ctx.ShouldBind(&address); err != nil {
+		response := utils.BuildFailedResponse("failed to update address", err.Error(), nil)
+		ctx.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	res, err := c.addressService.UpdateAddressById(ctx.Request.Context(), addressId, customerId, address)
+	if err != nil {
+		response := utils.BuildFailedResponse("failed to update address", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := utils.BuildSuccessResponse("success to update address", res)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (c *addressController) DeleteAddressById(ctx *gin.Context) {
+	customerId := ctx.MustGet("id").(string)
+	addressId := ctx.Param("address_id")
+
+	if _, err := c.addressService.GetAddressById(ctx.Request.Context(), addressId, customerId); err != nil {
+		response := utils.BuildFailedResponse("failed delete address", err.Error(), nil)
+		ctx.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	if err := c.addressService.DeleteAddressById(ctx.Request.Context(), addressId, customerId); err != nil {
+		response := utils.BuildFailedResponse("failed delete address", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := utils.BuildSuccessResponse("success delete address", nil)
 	ctx.JSON(http.StatusOK, response)
 }
