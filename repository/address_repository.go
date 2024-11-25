@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,6 +25,8 @@ type (
 		CreateAddress(ctx context.Context, tx *gorm.DB, address models.Address) (models.Address, error)
 		GetAllAddressByCustomerId(ctx context.Context, tx *gorm.DB, customerId string) ([]dto.AddressResponse, error)
 		GetAddressById(ctx context.Context, tx *gorm.DB, addressId string, customerId string) (dto.AddressResponse, error)
+		UpdateAddressById(ctx context.Context, tx *gorm.DB, addressId string, address models.Address) (models.Address, error)
+		DeleteAddressById(ctx context.Context, tx *gorm.DB, addressId string) error
 	}
 
 	addressRepository struct {
@@ -124,6 +127,7 @@ func (r *addressRepository) GetAddressById(ctx context.Context, tx *gorm.DB, add
 	err := tx.Raw(`SELECT id,
     street,
 	ST_AsText(coordinates) AS coordinates,
+	customer_id,
     created_at,
     updated_at
 	FROM addresses
@@ -133,7 +137,14 @@ func (r *addressRepository) GetAddressById(ctx context.Context, tx *gorm.DB, add
 		return dto.AddressResponse{}, err
 	}
 
-	if address.CustomerID != uuid.MustParse(customerId) {
+	fmt.Print(address.CustomerID)
+	fmt.Print(customerId)
+
+	if address.CustomerID == uuid.Nil {
+		return dto.AddressResponse{}, errors.New("address not found")
+	}
+
+	if strings.Compare(address.CustomerID.String(), customerId) != 0 {
 		return dto.AddressResponse{}, errors.New("unauthorized to fetch another user address")
 	}
 
@@ -147,4 +158,31 @@ func (r *addressRepository) GetAddressById(ctx context.Context, tx *gorm.DB, add
 	}
 
 	return resp, nil
+}
+
+func (r *addressRepository) UpdateAddressById(ctx context.Context, tx *gorm.DB, addressId string, address models.Address) (models.Address, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	if err := tx.WithContext(ctx).Model(&models.Address{}).Where("id = ?", addressId).Updates(map[string]interface{}{
+		"street": address.Street,
+		"coordinates": address.Coordinates,
+	}).Error; err != nil {
+		return models.Address{}, err
+	}
+
+	return address, nil
+}
+
+func (r *addressRepository) DeleteAddressById(ctx context.Context, tx *gorm.DB, addressId string) error {
+	if tx == nil {
+		tx = r.db
+	}
+
+	if err := tx.WithContext(ctx).Delete(&models.Address{}, "id = ?", addressId).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
