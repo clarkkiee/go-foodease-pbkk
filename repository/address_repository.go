@@ -27,6 +27,8 @@ type (
 		GetAddressById(ctx context.Context, tx *gorm.DB, addressId string, customerId string) (dto.AddressResponse, error)
 		UpdateAddressById(ctx context.Context, tx *gorm.DB, addressId string, address models.Address) (models.Address, error)
 		DeleteAddressById(ctx context.Context, tx *gorm.DB, addressId string) error
+		GetActiveAddress(ctx context.Context, tx *gorm.DB, entityId string) (dto.AddressResponse, error)
+		SetActiveAddress(ctx context.Context, tx *gorm.DB, addressId string, customerId string) error
 	}
 
 	addressRepository struct {
@@ -137,9 +139,6 @@ func (r *addressRepository) GetAddressById(ctx context.Context, tx *gorm.DB, add
 		return dto.AddressResponse{}, err
 	}
 
-	fmt.Print(address.CustomerID)
-	fmt.Print(customerId)
-
 	if address.CustomerID == uuid.Nil {
 		return dto.AddressResponse{}, errors.New("address not found")
 	}
@@ -181,6 +180,53 @@ func (r *addressRepository) DeleteAddressById(ctx context.Context, tx *gorm.DB, 
 	}
 
 	if err := tx.WithContext(ctx).Delete(&models.Address{}, "id = ?", addressId).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *addressRepository) GetActiveAddress(ctx context.Context, tx *gorm.DB, entityId string) (dto.AddressResponse, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var address models.Address
+	err := tx.Raw(`SELECT id,
+    street,
+	ST_AsText(coordinates) AS coordinates,
+	customer_id,
+    created_at,
+    updated_at
+	FROM addresses
+	WHERE id = (
+		SELECT active_address_id FROM customers
+		WHERE id = ?
+	)`, entityId).Scan(&address).Error
+
+	if err != nil {
+		return dto.AddressResponse{}, err
+	}
+
+	response := dto.AddressResponse{
+		ID: address.ID,
+		Street: address.Street,
+		Longitude: address.Coordinates.Longitude,
+		Latitude: address.Coordinates.Latitude,
+		CreatedAt: address.CreatedAt,
+		UpdatedAt: address.UpdatedAt,		
+	}
+
+	return response, nil
+
+}
+
+func (r *addressRepository) SetActiveAddress(ctx context.Context, tx *gorm.DB, addressId string, customerId string) error {
+	if tx == nil {
+		tx = r.db
+	}
+
+	if err := tx.WithContext(ctx).Model(&models.Customer{}).Where("id = ?", customerId).Update("active_address_id", addressId).Error; err != nil {
 		return err
 	}
 

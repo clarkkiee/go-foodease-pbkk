@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type (
@@ -17,6 +18,8 @@ type (
 		GetAdrressById(ctx *gin.Context)
 		UpdateAddressById(ctx *gin.Context)
 		DeleteAddressById(ctx *gin.Context)
+		GetCustomerActiveAddressById(ctx *gin.Context)
+		SetActiveAddress(ctx *gin.Context)
 	}
 
 	addressController struct {
@@ -144,5 +147,40 @@ func (c *addressController) DeleteAddressById(ctx *gin.Context) {
 	}
 
 	response := utils.BuildSuccessResponse("success delete address", nil)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (c *addressController) GetCustomerActiveAddressById(ctx *gin.Context){
+	customerId := ctx.MustGet("id").(string)
+
+	res, err := c.addressService.GetActiveAddress(ctx.Request.Context(), customerId)
+	if err != nil {
+		response := utils.BuildFailedResponse("failed get active address", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	if res.ID == uuid.Nil {
+		response := utils.BuildSuccessResponse("there is no active address", struct{}{})
+		ctx.JSON(http.StatusOK, response)
+		return
+	}
+
+	response := utils.BuildSuccessResponse("success get active address", res)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (c *addressController) SetActiveAddress(ctx *gin.Context) {
+	customerId := ctx.MustGet("id"). (string)
+	addressId := ctx.Param("address_id")
+
+	res, err := c.addressService.SetActiveAddress(ctx.Request.Context(), addressId, customerId)
+	if err != nil {
+		response := utils.BuildFailedResponse("failed to set active address", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := utils.BuildSuccessResponse("success to set active address", res)
 	ctx.JSON(http.StatusOK, response)
 }

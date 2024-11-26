@@ -18,6 +18,8 @@ type (
 		GetAddressById(ctx context.Context, addressId string, customerId string) (dto.AddressResponse, error)
 		UpdateAddressById(ctx context.Context, addressId string, customerId string, req dto.CreateNewAddressRequest) (dto.AddressResponse, error)
 		DeleteAddressById(ctx context.Context, addressId string, customerId string) error
+		GetActiveAddress(ctx context.Context, customerId string) (dto.AddressResponse, error)
+		SetActiveAddress(ctx context.Context, addressId string, customerId string) (dto.AddressResponse, error) 
 	}
 
 	addressService struct {
@@ -130,4 +132,31 @@ func (s *addressService) DeleteAddressById(ctx context.Context, addressId string
 	}
 
 	return nil
+}
+
+func (s *addressService) GetActiveAddress(ctx context.Context, customerId string) (dto.AddressResponse, error) {
+	addr, err := s.addressRepo.GetActiveAddress(ctx, nil, customerId)
+	if err != nil {
+		return dto.AddressResponse{}, err
+	}
+	
+	if addr.ID == uuid.Nil {
+		return dto.AddressResponse{}, nil
+	}
+
+	return addr, nil
+}
+
+func (s *addressService) SetActiveAddress(ctx context.Context, addressId string, customerId string) (dto.AddressResponse, error) {
+	err := s.addressRepo.SetActiveAddress(ctx, nil, addressId, customerId)
+	if err != nil {
+		return dto.AddressResponse{}, err
+	}
+	
+	updatedAddr, err := s.addressRepo.GetAddressById(ctx, nil, addressId, customerId)
+	if err != nil {
+		return dto.AddressResponse{}, err
+	}
+
+	return updatedAddr, nil
 }

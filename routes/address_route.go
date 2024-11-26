@@ -16,5 +16,7 @@ func Address(route *gin.Engine, addressController controller.AddressController, 
 		routes.GET("/:address_id", middleware.Authenticate(jwtService), addressController.GetAdrressById)
 		routes.PUT("/:address_id", middleware.Authenticate(jwtService), addressController.UpdateAddressById)
 		routes.DELETE("/:address_id", middleware.Authenticate(jwtService), addressController.DeleteAddressById)
+		routes.GET("/active", middleware.Authenticate(jwtService), addressController.GetCustomerActiveAddressById)
+		routes.PUT("/:address_id/active", middleware.Authenticate(jwtService), addressController.SetActiveAddress)
 	}
 }	
