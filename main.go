@@ -6,6 +6,7 @@ import (
 
 	"go-foodease-be/config"
 	"go-foodease-be/controller"
+	"go-foodease-be/middleware"
 	"go-foodease-be/repository"
 	"go-foodease-be/routes"
 	"go-foodease-be/service"
@@ -28,6 +29,7 @@ func main() {
 	)
 
 	server := gin.Default()
+	server.Use(middleware.CORSMiddleware())
 
 	routes.Customer(server, customerController, jwtService)
 	routes.Address(server,addressController, jwtService)

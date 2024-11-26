@@ -122,7 +122,6 @@ func (s *addressService) DeleteAddressById(ctx context.Context, addressId string
 
 	_, err := s.addressRepo.GetAddressById(ctx, nil, addressId, customerId)
 	if err != nil {
-		fmt.Print("not found")
 		return err
 	}
 
