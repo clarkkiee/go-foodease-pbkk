@@ -6,9 +6,8 @@ type (
 	StoreResponse struct {
 		ID uuid.UUID `json:"id"`
 		Email string `json:"email"`
-		FirstName string `json:"first_name"`
-		LastName string `json:"last_name"`
-		ActiveAddressId *uuid.UUID `json:"active_address_id,omitempty"`
+		StoreName string `json:"store_name"`
+		AddressId *uuid.UUID `json:"address_id,omitempty"`
 	}
 
 	StoreLoginRequest struct {	

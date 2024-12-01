@@ -12,6 +12,7 @@ import (
 type (
 	StoreController interface {
 		Login(ctx *gin.Context)
+		DeleteAccount(ctx *gin.Context)
 	}
 
 	storeController struct {
@@ -42,5 +43,18 @@ func (c *storeController) Login(ctx *gin.Context){
 
 		response := utils.BuildSuccessResponse("login success", res)
 		ctx.JSON(http.StatusOK, response)
+}
+
+func (c *storeController) DeleteAccount(ctx *gin.Context) {
+	storeId := ctx.MustGet("id").(string)
+	err := c.storeService.DeleteAccount(ctx.Request.Context(), storeId)
+	if err != nil {
+		response := utils.BuildFailedResponse("failed to delete account", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := utils.BuildSuccessResponse("success to delete account", nil)
+	ctx.JSON(http.StatusOK, response)
 }
 

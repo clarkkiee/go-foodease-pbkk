@@ -2,7 +2,7 @@ package routes
 
 import (
 	"go-foodease-be/controller"
-	// "go-foodease-be/middleware"
+	"go-foodease-be/middleware"
 	"go-foodease-be/service"
 
 	"github.com/gin-gonic/gin"
@@ -12,5 +12,6 @@ func Store(route *gin.Engine, storeController controller.StoreController, jwtSer
 	routes := route.Group("/api/store")
 	{
 		routes.POST("/login", storeController.Login)
+		routes.DELETE("/delete", middleware.Authenticate(jwtService), storeController.DeleteAccount)
 	}
 }

@@ -12,10 +12,10 @@ import (
 type (
 	StoreService interface {
 		// Register(ctx context.Context, req dto.CustomerRegisterRequest) (dto.CustomerResponse, error)
-		// GetCustomerById(ctx context.Context, customerId string) (dto.CustomerResponse, error)
+		GetStoreById(ctx context.Context, customerId string) (dto.StoreResponse, error)
 		// GetCustomerByEmail(ctx context.Context, email string) (dto.CustomerResponse, error)
 		VerifyLogin(ctx context.Context, req dto.StoreLoginRequest) (dto.StoreLoginResponse, error)
-		// DeleteAccount(ctx context.Context, id string) error
+		DeleteAccount(ctx context.Context, id string) error
 	}
 
 	storeService struct {
@@ -29,6 +29,20 @@ func NewStoreService(storeRepo repository.StoreRepository, jwtService JWTService
 		storeRepo: storeRepo,
 		jwtService: jwtService,
 	}
+}
+
+func (s *storeService) GetStoreById(ctx context.Context, storeId string) (dto.StoreResponse, error) {
+	store, err := s.storeRepo.GetStoreById(ctx, nil, storeId)
+	if err != nil {
+		return dto.StoreResponse{}, err
+	}
+
+	return dto.StoreResponse{
+		ID: store.ID,
+		Email: store.Email,
+		StoreName:store.StoreName,
+		AddressId:store.AddressID,
+	}, nil
 }
 
 func (s *storeService) VerifyLogin(ctx context.Context, req dto.StoreLoginRequest) (dto.StoreLoginResponse, error) {
@@ -49,4 +63,19 @@ func (s *storeService) VerifyLogin(ctx context.Context, req dto.StoreLoginReques
 		Token: token,
 		ID: store.ID.String(),
 	}, nil
+}
+
+func (s *storeService) DeleteAccount(ctx context.Context, id string) error {
+
+	_, v_err := s.storeRepo.GetStoreById(ctx, nil, id)
+	if v_err != nil {
+		return v_err
+	}
+
+	err := s.storeRepo.DeleteAccount(ctx, nil, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
