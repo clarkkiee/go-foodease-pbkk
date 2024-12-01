@@ -20,4 +20,10 @@ type (
 		ID string `json:"id"`
 	}
 
+	StoreRegisterRequest struct {
+		Email string `json:"email" form:"email" binding:"required"`
+		StoreName string `json:"store_name" form:"store_name" binding:"required"`
+		StorePassword string `json:"store_password" form:"store_password" binding:"required"`
+		AddressID *uuid.UUID `json:"address_id"`
+	}
 )
