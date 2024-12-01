@@ -92,7 +92,7 @@ func (s *storeService) Register(ctx context.Context, req dto.StoreRegisterReques
 		Email: req.Email,
 		StoreName: req.StoreName,
 		StorePassword: req.StorePassword,
-		AddressID: req.AddressID,
+		AddressID: nil,
 	}
 
 	storeReg, err := s.storeRepo.RegisterStore(ctx, nil, newStore)
