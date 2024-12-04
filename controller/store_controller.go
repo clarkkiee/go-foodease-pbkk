@@ -17,12 +17,14 @@ type (
 
 	storeController struct {
 		storeService service.StoreService
+		addressService service.AddressService
 	}
 )
 
-func NewStoreController(ss service.StoreService) StoreController {
+func NewStoreController(ss service.StoreService, as service.AddressService) StoreController {
 	return &storeController{
 		storeService: ss,
+		addressService: as,
 	}
 }
 

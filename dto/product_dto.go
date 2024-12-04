@@ -1,17 +1,33 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type CreateProductRequest struct {
 	ProductName   string    `json:"product_name"`
 	Description   string    `json:"description"`
 	PriceBefore   float64    `json:"price_before"`
 	PriceAfter    float64    `json:"price_after"`
-	ProductionTime time.Time `json:"production_time"`
-	ExpiredTime   time.Time `json:"expired_time"`
+	ProductionTime string `json:"production_time"`
+	ExpiredTime   string `json:"expired_time"`
 	Stock         uint64    `json:"stock"`
-	CategoryID    string    `json:"category_id"`
-	ImageID       *string   `json:"image_id"`
+	CategorySlug    string    `json:"category_slug"`
+	ImageID       string   `json:"image_id,omitempty"`
+}
+
+type CreateProduct struct {
+	ProductName   string    `json:"product_name"`
+	Description   string    `json:"description"`
+	PriceBefore   float64    `json:"price_before"`
+	PriceAfter    float64    `json:"price_after"`
+	ProductionTime string `json:"production_time"`
+	ExpiredTime   string `json:"expired_time"`
+	Stock         uint64    `json:"stock"`
+	CategoryID    uuid.UUID    `json:"category_id"`
+	ImageID       string   `json:"image_id,omitempty"`
 }
 
 type ProductResponse struct {
@@ -20,20 +36,26 @@ type ProductResponse struct {
 	Description   string    `json:"description"`
 	PriceBefore   float64    `json:"price_before"`
 	PriceAfter    float64    `json:"price_after"`
-	ProductionTime time.Time `json:"production_time"`
-	ExpiredTime   time.Time `json:"expired_time"`
+	ProductionTime string `json:"production_time"`
+	ExpiredTime   string `json:"expired_time"`
 	Stock         uint64    `json:"stock"`
 	CategoryID    string    `json:"category_id"`
-	ImageID       *string   `json:"image_id"`
+	ImageID       string   `json:"image_id,omitempty"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
+
 type UpdateProductRequest struct {
     ProductName   string    `json:"product_name"`
     Description   string    `json:"description"`
     PriceBefore   float64    `json:"price_before"`
     PriceAfter    float64    `json:"price_after"`
-    Stock         uint64    `json:"stock"`
-    CategoryID    string    `json:"category_id"`
-    ImageID       *string   `json:"image_id"`
+	ProductionTime string	`json:"production_time"`
+	ExpiredTime 	string 	`json:"expired_time"`
+	CategorySlug 	string `json:"category_slug"`
+	ImageID       string   `json:"image_id,omitempty"`
+}
+
+type UpdateProductResponse struct {
+	ID uuid.UUID `json:"id"`
 }
