@@ -13,6 +13,7 @@ type (
 	ProductService interface {
 		CreateProduct(ctx context.Context, req dto.CreateProduct, storeID string) (dto.ProductResponse, error)
 		UpdateProduct(ctx context.Context, productID string, req dto.UpdateProductRequest, storeID string) (uuid.UUID, error) 
+		GetMinimumProduct(ctx context.Context, productID string) (dto.GetMinimumProductResult, error)
 	}
 
 	productService struct {
@@ -85,4 +86,13 @@ func (s *productService) UpdateProduct(ctx context.Context, productID string, re
 
 	return uuid.MustParse(productID), nil
 
+}
+
+func (s *productService) GetMinimumProduct(ctx context.Context, productID string) (dto.GetMinimumProductResult, error) {
+	result, err := s.productRepo.GetMinimumProduct(ctx, nil, productID)
+	if err != nil {
+		return dto.GetMinimumProductResult{}, err
+	}
+
+	return result, nil
 }
