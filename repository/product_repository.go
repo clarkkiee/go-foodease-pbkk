@@ -13,6 +13,7 @@ type ProductRepository interface {
 	CreateProduct(ctx context.Context, product models.Product, storeID string) (models.Product, error)
 	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error) 
 	GetMinimumProduct(ctx context.Context, tx *gorm.DB, productId string) (dto.GetMinimumProductResult, error)
+	DeleteProduct(ctx context.Context, productID string, storeID string) error
 }
 
 type productRepository struct {
@@ -24,6 +25,7 @@ func NewProductRepository(db *gorm.DB) ProductRepository {
 		db: db,
 	}
 }
+
 func (r *productRepository) CreateProduct(ctx context.Context, product models.Product, storeID string) (models.Product, error) {
 	if err := r.db.WithContext(ctx).Create(&product).Error; err != nil {
 		return models.Product{}, err
@@ -73,4 +75,17 @@ func (r *productRepository) GetMinimumProduct(ctx context.Context, tx *gorm.DB, 
 	}
 
 	return res, nil
+}
+
+func (r *productRepository) DeleteProduct(ctx context.Context, productID string, storeID string) error {
+    var product models.Product
+    if err := r.db.WithContext(ctx).Where("id = ? AND store_id = ?", productID, storeID).First(&product).Error; err != nil {
+        return err
+    }
+
+    if err := r.db.WithContext(ctx).Delete(&product).Error; err != nil {
+        return err
+    }
+
+    return nil
 }
