@@ -12,7 +12,8 @@ func Product(route *gin.Engine, productController controller.ProductController, 
     routes := route.Group("/api/product")
     {
         routes.POST("/create", middleware.Authenticate(jwtService), productController.CreateProduct)
-        routes.PUT("/update/:product_id", middleware.Authenticate(jwtService), productController.UpdateProduct) 
+        routes.PUT("/update/:product_id", middleware.Authenticate(jwtService), productController.UpdateProduct)
+        routes.GET("/:product_id", middleware.Authenticate(jwtService), productController.GetProductById)
     }
 }
 

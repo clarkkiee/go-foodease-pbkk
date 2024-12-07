@@ -10,7 +10,8 @@ import (
 )
 type ProductController interface {
     CreateProduct(ctx *gin.Context)
-    UpdateProduct(ctx *gin.Context) 
+    UpdateProduct(ctx *gin.Context)
+	GetProductById(ctx *gin.Context) 
 }
 
 type productController struct {
@@ -94,4 +95,15 @@ func (c *productController) UpdateProduct(ctx *gin.Context) {
     ctx.JSON(http.StatusOK, response)
 }
 
+func (c *productController) GetProductById(ctx *gin.Context) {
+    productId := ctx.Param("product_id")
+	res, err := c.productService.GetProductById(ctx.Request.Context(), productId)
+	if err != nil {
+		response := utils.BuildFailedResponse("Failed to get product", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return 
+	}
 
+	response := utils.BuildSuccessResponse("Get Product Successfully", res)
+	ctx.JSON(http.StatusOK, response)
+}
