@@ -10,7 +10,8 @@ import (
 
 type ProductRepository interface {
 	CreateProduct(ctx context.Context, product models.Product, storeID string) (models.Product, error)
-	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error) 
+	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error)
+	GetProductById(ctx context.Context, tx *gorm.DB, productId string) (models.Product, error)
 }
 
 type productRepository struct {
@@ -51,4 +52,18 @@ func (r *productRepository) UpdateProduct(ctx context.Context, productID string,
 	}
 
 	return product.ID, nil
+}
+
+func (r *productRepository) GetProductById(ctx context.Context, tx *gorm.DB, productId string) (models.Product, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var product models.Product
+	
+	if err := tx.WithContext(ctx).Where("id = ?", productId).Take(&product).Error; err != nil {
+		return models.Product{}, err
+	}
+
+	return product, nil
 }
