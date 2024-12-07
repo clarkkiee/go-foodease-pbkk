@@ -13,19 +13,21 @@ type (
 	ProductService interface {
 		CreateProduct(ctx context.Context, req dto.CreateProduct, storeID string) (dto.ProductResponse, error)
 		UpdateProduct(ctx context.Context, productID string, req dto.UpdateProductRequest, storeID string) (uuid.UUID, error)
+		GetMinimumProduct(ctx context.Context, productID string) (dto.GetMinimumProductResult, error)
+		DeleteProduct(ctx context.Context, productID string, storeID string) error  
 		GetProductById(ctx context.Context, productId string) (dto.ProductResponse, error)
 	}
 
 	productService struct {
 		productRepo repository.ProductRepository
-		jwtService JWTService
+		jwtService  JWTService
 	}
 )
 
 func NewProductService(productRepo repository.ProductRepository, jwtService JWTService) ProductService {
 	return &productService{
 		productRepo: productRepo,
-		jwtService: jwtService,
+		jwtService:  jwtService,
 	}
 }
 
@@ -57,27 +59,26 @@ func (s *productService) CreateProduct(ctx context.Context, req dto.CreateProduc
 		ExpiredTime:   createdProduct.ExpiredTime,
 		Stock:         createdProduct.Stock,
 		CategoryID:    createdProduct.CategoryID.String(),
-		ImageID:       createdProduct.ImageID.String(),  
+		ImageID:       createdProduct.ImageID.String(),
 		CreatedAt:     createdProduct.CreatedAt,
 		UpdatedAt:     createdProduct.UpdatedAt,
 	}, nil
 }
-
 
 func (s *productService) UpdateProduct(ctx context.Context, productID string, req dto.UpdateProductRequest, storeID string) (uuid.UUID, error) {
 
 	parsedImageId, _ := uuid.Parse(req.ImageID)
 
 	updatedProduct := models.Product{
-        ProductName:   req.ProductName,
-        Description:   req.Description,
-        PriceBefore:   req.PriceBefore,
-        PriceAfter:    req.PriceAfter,
-        ProductionTime: req.ProductionTime,
-        ExpiredTime:   req.ExpiredTime,     
-		CategoryID: uuid.MustParse(req.CategorySlug),
-		ImageID: parsedImageId,
-    }
+		ProductName:   req.ProductName,
+		Description:   req.Description,
+		PriceBefore:   req.PriceBefore,
+		PriceAfter:    req.PriceAfter,
+		ProductionTime: req.ProductionTime,
+		ExpiredTime:   req.ExpiredTime,
+		CategoryID:    uuid.MustParse(req.CategorySlug),
+		ImageID:       parsedImageId,
+	}
 
 	_, err := s.productRepo.UpdateProduct(ctx, productID, updatedProduct, storeID)
 	if err != nil {
@@ -85,7 +86,23 @@ func (s *productService) UpdateProduct(ctx context.Context, productID string, re
 	}
 
 	return uuid.MustParse(productID), nil
+}
 
+func (s *productService) GetMinimumProduct(ctx context.Context, productID string) (dto.GetMinimumProductResult, error) {
+	result, err := s.productRepo.GetMinimumProduct(ctx, nil, productID)
+	if err != nil {
+		return dto.GetMinimumProductResult{}, err
+	}
+
+	return result, nil
+}
+
+func (s *productService) DeleteProduct(ctx context.Context, productID string, storeID string) error {
+    err := s.productRepo.DeleteProduct(ctx, productID, storeID)
+    if err != nil {
+        return err
+    }
+    return nil
 }
 
 func (s *productService) GetProductById(ctx context.Context, productId string) (dto.ProductResponse, error){

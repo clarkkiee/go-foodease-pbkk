@@ -8,10 +8,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
 type ProductController interface {
     CreateProduct(ctx *gin.Context)
     UpdateProduct(ctx *gin.Context)
+
+    DeleteProduct(ctx *gin.Context) // Menambahkan metode DeleteProduct
 	GetProductById(ctx *gin.Context) 
+
 }
 
 type productController struct {
@@ -42,19 +46,19 @@ func (c *productController) CreateProduct(ctx *gin.Context) {
 		return
 	}
 
-	createProcuct := dto.CreateProduct{
-		ProductName: req.ProductName,
-		Description: req.Description,
-		PriceBefore: req.PriceBefore,
-		PriceAfter: req.PriceAfter,
+	createProduct := dto.CreateProduct{
+		ProductName:   req.ProductName,
+		Description:   req.Description,
+		PriceBefore:   req.PriceBefore,
+		PriceAfter:    req.PriceAfter,
 		ProductionTime: req.ProductionTime,
-		ExpiredTime: req.ExpiredTime,
-		Stock: req.Stock,
-		CategoryID: categoryId,
-		ImageID: req.ImageID,
+		ExpiredTime:   req.ExpiredTime,
+		Stock:         req.Stock,
+		CategoryID:    categoryId,
+		ImageID:       req.ImageID,
 	}
 
-	res, err := c.productService.CreateProduct(ctx, createProcuct, storeID)
+	res, err := c.productService.CreateProduct(ctx, createProduct, storeID)
 	if err != nil {
 		response := utils.BuildFailedResponse("failed to create product", err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, response)
@@ -66,8 +70,8 @@ func (c *productController) CreateProduct(ctx *gin.Context) {
 }
 
 func (c *productController) UpdateProduct(ctx *gin.Context) {
-    productID := ctx.Param("product_id")  
-    storeID := ctx.MustGet("id").(string) 
+    productID := ctx.Param("product_id")  // Ambil product_id dari URL
+    storeID := ctx.MustGet("id").(string) // Ambil store_id dari context JWT (auth)
     var req dto.UpdateProductRequest
     if err := ctx.ShouldBind(&req); err != nil {
         response := utils.BuildFailedResponse("invalid request", err.Error(), nil)
@@ -95,6 +99,21 @@ func (c *productController) UpdateProduct(ctx *gin.Context) {
     ctx.JSON(http.StatusOK, response)
 }
 
+func (c *productController) DeleteProduct(ctx *gin.Context) {
+    productID := ctx.Param("product_id")  
+    storeID := ctx.MustGet("id").(string)
+
+    err := c.productService.DeleteProduct(ctx.Request.Context(), productID, storeID)
+    if err != nil {
+        response := utils.BuildFailedResponse("failed to delete product", err.Error(), nil)
+        ctx.JSON(http.StatusBadRequest, response)
+        return
+    }
+
+    response := utils.BuildSuccessResponse("product deleted successfully", nil)
+    ctx.JSON(http.StatusOK, response)
+}
+
 func (c *productController) GetProductById(ctx *gin.Context) {
     productId := ctx.Param("product_id")
 	res, err := c.productService.GetProductById(ctx.Request.Context(), productId)
@@ -103,6 +122,7 @@ func (c *productController) GetProductById(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, response)
 		return 
 	}
+
 
 	response := utils.BuildSuccessResponse("Get Product Successfully", res)
 	ctx.JSON(http.StatusOK, response)
