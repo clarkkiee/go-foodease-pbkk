@@ -12,7 +12,7 @@ import (
 type ProductRepository interface {
 	CreateProduct(ctx context.Context, product models.Product, storeID string) (models.Product, error)
 	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error) 
-	DeleteProduct(ctx context.Context, productID string, storeID string) 
+	DeleteProduct(ctx context.Context, productID string, storeID string) error
 	GetMinimumProduct(ctx context.Context, tx *gorm.DB, productId string) (dto.GetMinimumProductResult, error)
 	GetProductById(ctx context.Context, tx *gorm.DB, productId string) (models.Product, error)
 }
@@ -66,18 +66,11 @@ func (r *productRepository) UpdateProduct(ctx context.Context, productID string,
 	}
 
 	var product models.Product
-	if err := tx.WithContext(ctx).Model(&models.Product{}).Select("id, stock, store_id, category_id").Where("id = ?", productId).Take(&product).Error; err != nil {
-		return dto.GetMinimumProductResult{}, err
+	if err := tx.WithContext(ctx).Model(&models.Product{}).Where("id = ?", productId).Take(&product).Error; err != nil {
+		return models.Product{}, err
 	}
 
-	res := dto.GetMinimumProductResult{
-		ID: product.ID.String(),
-		Stock: product.Stock,
-		StoreID: product.StoreId.String(),
-		CategoryID: product.CategoryID.String(),
-	}
-
-	return res, nil
+	return product, nil
 }
 
 func (r *productRepository) GetMinimumProduct(ctx context.Context, tx *gorm.DB, productId string) (dto.GetMinimumProductResult, error) {

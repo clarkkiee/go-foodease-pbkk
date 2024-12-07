@@ -38,5 +38,5 @@ func (c *orderController) AddToCart(ctx *gin.Context) {
 	}
 
 
-	c.orderService.AddToCart(ctx.Request.Context(), productReq, customerId, productInfo.ID)	
+	c.orderService.AddToCart(ctx.Request.Context(), customerId, productReq.ProductId)	
 }
