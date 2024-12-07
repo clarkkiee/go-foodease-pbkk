@@ -14,7 +14,6 @@ type ProductRepository interface {
 	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error) 
 	DeleteProduct(ctx context.Context, productID string, storeID string) 
 	GetMinimumProduct(ctx context.Context, tx *gorm.DB, productId string) (dto.GetMinimumProductResult, error)
-	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error)
 	GetProductById(ctx context.Context, tx *gorm.DB, productId string) (models.Product, error)
 }
 
@@ -114,11 +113,4 @@ func (r *productRepository) DeleteProduct(ctx context.Context, productID string,
     return nil
 }
 
-	
-	if err := tx.WithContext(ctx).Where("id = ?", productId).Take(&product).Error; err != nil {
-		return models.Product{}, err
-	}
-
-	return product, nil
-}
 
