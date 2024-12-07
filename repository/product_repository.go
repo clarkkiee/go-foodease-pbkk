@@ -12,8 +12,9 @@ import (
 type ProductRepository interface {
 	CreateProduct(ctx context.Context, product models.Product, storeID string) (models.Product, error)
 	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error) 
-	GetMinimumProduct(ctx context.Context, tx *gorm.DB, productId string) (dto.GetMinimumProductResult, error)
 	DeleteProduct(ctx context.Context, productID string, storeID string) error
+	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error)
+	GetProductById(ctx context.Context, tx *gorm.DB, productId string) (models.Product, error)
 }
 
 type productRepository struct {
@@ -57,7 +58,9 @@ func (r *productRepository) UpdateProduct(ctx context.Context, productID string,
 	return product.ID, nil
 }
 
-func (r *productRepository) GetMinimumProduct(ctx context.Context, tx *gorm.DB, productId string) (dto.GetMinimumProductResult, error) {
+
+  func (r *productRepository) GetProductById(ctx context.Context, tx *gorm.DB, productId string) (models.Product, error) {
+
 	if tx == nil {
 		tx = r.db
 	}
@@ -89,3 +92,12 @@ func (r *productRepository) DeleteProduct(ctx context.Context, productID string,
 
     return nil
 }
+
+	
+	if err := tx.WithContext(ctx).Where("id = ?", productId).Take(&product).Error; err != nil {
+		return models.Product{}, err
+	}
+
+	return product, nil
+}
+

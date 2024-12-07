@@ -15,6 +15,7 @@ type (
 		UpdateProduct(ctx context.Context, productID string, req dto.UpdateProductRequest, storeID string) (uuid.UUID, error)
 		GetMinimumProduct(ctx context.Context, productID string) (dto.GetMinimumProductResult, error)
 		DeleteProduct(ctx context.Context, productID string, storeID string) error  
+		GetProductById(ctx context.Context, productId string) (dto.ProductResponse, error)
 	}
 
 	productService struct {
@@ -104,3 +105,24 @@ func (s *productService) DeleteProduct(ctx context.Context, productID string, st
     return nil
 }
 
+func (s *productService) GetProductById(ctx context.Context, productId string) (dto.ProductResponse, error){
+	product, err := s.productRepo.GetProductById(ctx, nil, productId)
+	if err != nil {
+		return dto.ProductResponse{}, err
+	}
+
+	return dto.ProductResponse{
+		ID: product.ID.String(),
+		ProductName: product.ProductName,
+		Description: product.Description,
+		PriceBefore: product.PriceBefore,
+		PriceAfter: product.PriceAfter,
+		ProductionTime: product.ProductionTime,
+		ExpiredTime: product.ExpiredTime,
+		Stock: product.Stock,
+		CategoryID: product.CategoryID.String(),
+		ImageID: product.ImageID.String(),
+		CreatedAt: product.CreatedAt,
+		UpdatedAt: product.UpdatedAt,
+	}, nil
+}
