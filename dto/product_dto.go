@@ -63,6 +63,3 @@ type GetMinimumProductResult struct {
 	CategoryID string `json:"category_id"`
 }
 
-type AddToCartSchema struct {
-	ProductId string `json:"product_id"`
-}

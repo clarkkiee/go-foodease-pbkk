@@ -37,12 +37,6 @@ func (c *orderController) AddToCart(ctx *gin.Context) {
 		return
 	}
 
-	productInfo, err := c.productService.GetMinimumProduct(ctx.Request.Context(), productReq.ProductId)
-	if err != nil {
-		response := utils.BuildFailedResponse("failed to add product to cart", err.Error(), nil)
-		ctx.JSON(http.StatusBadRequest, response)
-		return
-	}
 
-	c.orderService.AddToCart(ctx.Request.Context(), productInfo.StoreID, customerId)	
+	c.orderService.AddToCart(ctx.Request.Context(), productReq, customerId, productInfo.ID)	
 }
