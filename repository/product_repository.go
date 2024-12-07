@@ -12,7 +12,8 @@ import (
 type ProductRepository interface {
 	CreateProduct(ctx context.Context, product models.Product, storeID string) (models.Product, error)
 	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error) 
-	DeleteProduct(ctx context.Context, productID string, storeID string) error
+	DeleteProduct(ctx context.Context, productID string, storeID string) 
+	GetMinimumProduct(ctx context.Context, tx *gorm.DB, productId string) (dto.GetMinimumProductResult, error)
 	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error)
 	GetProductById(ctx context.Context, tx *gorm.DB, productId string) (models.Product, error)
 }
