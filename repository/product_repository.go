@@ -3,14 +3,12 @@ package repository
 import (
 	"context"
 	"go-foodease-be/models"
-
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type ProductRepository interface {
 	CreateProduct(ctx context.Context, product models.Product, storeID string) (models.Product, error)
-	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error) 
+	UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (models.Product, error) // <-- Tambahkan ini
 }
 
 type productRepository struct {
@@ -29,26 +27,29 @@ func (r *productRepository) CreateProduct(ctx context.Context, product models.Pr
 	return product, nil
 }
 
-func (r *productRepository) UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (uuid.UUID, error) {
+func (r *productRepository) UpdateProduct(ctx context.Context, productID string, updatedProduct models.Product, storeID string) (models.Product, error) {
 	var product models.Product
 	
+	
 	if err := r.db.WithContext(ctx).Where("id = ? AND store_id = ?", productID, storeID).First(&product).Error; err != nil {
-		return uuid.Nil, err 
+		return models.Product{}, err 
 	}
 
+	// Perbarui data produk menggunakan Updates() untuk menghindari perubahan satu per satu
 	if err := r.db.WithContext(ctx).Model(&product).Updates(map[string]interface{}{
 		"product_name":     updatedProduct.ProductName,
 		"description":      updatedProduct.Description,
 		"price_before":     updatedProduct.PriceBefore,
 		"price_after":      updatedProduct.PriceAfter,
-		"production_time":  updatedProduct.ProductionTime,
-		"expired_time":     updatedProduct.ExpiredTime,
+		//"production_time":  updatedProduct.ProductionTime,
+		//"expired_time":     updatedProduct.ExpiredTime,
 		"stock":            updatedProduct.Stock,
 		"category_id":      updatedProduct.CategoryID,
 		"image_id":         updatedProduct.ImageID,
 	}).Error; err != nil {
-		return uuid.Nil, err
+		return models.Product{}, err
 	}
 
-	return product.ID, nil
+	// Kembalikan produk yang telah diperbarui
+	return product, nil
 }

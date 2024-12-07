@@ -12,14 +12,12 @@ type Product struct {
 	Description string `json:"description"`
 	PriceBefore float64 `json:"price_before"`
 	PriceAfter float64 `json:"price_after"`
-	ProductionTime string `gorm:"type:time" json:"production_time"`
-	ExpiredTime string `gorm:"type:time" json:"expired_time"`
+	ProductionTime time.Time `gorm:"type:time" json:"production_time"`
+	ExpiredTime time.Time `gorm:"type:time" json:"expired_time"`
 	Stock uint64 `json:"stock"`
 	StoreId uuid.UUID `gorm:"type:uuid" json:"store_id"`
-	Store Store `gorm:"foreignKey:StoreId" json:"-"`
 	CategoryID uuid.UUID `gorm:"type:uuid" json:"category_id"`
-	Category Category `gorm:"foreignKey:CategoryID" json:"-"`
-	ImageID uuid.UUID `gorm:"type:uuid;" json:"image_id,omitempty"`
+	ImageID *uuid.UUID `gorm:"type:uuid;" json:"image_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

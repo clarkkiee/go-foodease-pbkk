@@ -27,16 +27,13 @@ func main() {
 		addressService service.AddressService = service.NewAddressService(addressRepository, jwtService)
 		addressController controller.AddressController = controller.NewAddressController(addressService)
 
-		categoryRepository repository.CategoryRepository = repository.NewCategoryRepository(db)
-		categoryService service.CategoryService = service.NewCategoryService(categoryRepository)
-
 		productRepository repository.ProductRepository = repository.NewProductRepository(db)
 		productService service.ProductService = service.NewProductService(productRepository, jwtService)
-		productController controller.ProductController = controller.NewProductController(productService, categoryService)
+		productController controller.ProductController = controller.NewProductController(productService)
 		
 		storeRepository repository.StoreRepository = repository.NewStoreRepository(db)
 		storeService service.StoreService = service.NewStoreService(storeRepository, jwtService)
-		storeController controller.StoreController = controller.NewStoreController(storeService, addressService)
+		storeController controller.StoreController = controller.NewStoreController(storeService)
 	)
 
 	server := gin.Default()
