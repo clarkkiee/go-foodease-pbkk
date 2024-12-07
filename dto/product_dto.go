@@ -56,6 +56,10 @@ type UpdateProductRequest struct {
 	ImageID       string   `json:"image_id,omitempty"`
 }
 
-type UpdateProductResponse struct {
-	ID uuid.UUID `json:"id"`
+type GetMinimumProductResult struct {
+	ID string `json:"id"`
+	Stock uint64 `json:"stock"`
+	StoreID string `json:"store_id"`
+	CategoryID string `json:"category_id"`
 }
+
