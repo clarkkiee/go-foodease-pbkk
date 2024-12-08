@@ -23,9 +23,9 @@ type Order struct {
 	ID uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"id"`
 	Status Status `gorm:"type:enum('in-cart-unselected', 'in-cart-selected', 'waiting', 'processed', 'ready', 'done', 'cancelled', 'rejected')" json:"status"`
 	CustomerID uuid.UUID `gorm:"type:uuid" json:"customer_id"`
-	Customer Customer `gorm:"foreignKey:CustomerID" json:"-"`
+	Customer Customer `gorm:"foreignKey:CustomerID" json:"customer"`
 	StoreID uuid.UUID `gorm:"type:uuid" json:"store_id"`
-	Store Store `gorm:"foreignKey:StoreID" json:"-"`
+	Store Store `gorm:"foreignKey:StoreID" json:"store"`
 	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedAt time.Time `json:"updated_at"`	
 }

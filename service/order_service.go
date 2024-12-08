@@ -13,6 +13,7 @@ import (
 type (
 	OrderService interface {
 		AddToCart(ctx context.Context, customerId string, productId string) (dto.Order, error)
+		GetCustomerCart(ctx context.Context, customerId string) (dto.GetUserCartResults, error)
 	}
 
 	orderService struct {
@@ -104,7 +105,7 @@ func (s *orderService) AddToCart(ctx context.Context, customerId string, product
 		}
 		fmt.Print(orderProductID)
 	}
-	//terakhir -> dapatkan data order yang baru saja dibuat by ID
+	// dapatin data order yang baru saja dibuat by ID
 
 	newOrderProduct, err := s.orderRepo.GetOrderById(ctx, tx, orderID)
 	if err != nil {
@@ -117,4 +118,13 @@ func (s *orderService) AddToCart(ctx context.Context, customerId string, product
 	formattedRes := dto.ConvertToGetOrderSchema([]dto.OrderDetails{newOrderProduct})
 
 	return formattedRes, nil
+}
+
+func (s *orderService) GetCustomerCart(ctx context.Context, customerId string) (dto.GetUserCartResults, error) {
+	res, err := s.orderRepo.GetUserCartByCustomer(ctx, nil, customerId)
+	if err != nil {
+		return dto.GetUserCartResults{}, err
+	}
+
+	return res, nil
 }

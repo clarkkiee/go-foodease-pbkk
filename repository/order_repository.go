@@ -20,6 +20,7 @@ type (
 		CreateOrderProduct(ctx context.Context, tx *gorm.DB, orderId string, productId string) (string, error)
 		IncreaseOrderProductQuantity(ctx context.Context, tx *gorm.DB, customerId string, orderId string, productId string) (string, error)
 		GetOrderById(ctx context.Context, tx *gorm.DB, orderId string) (dto.OrderDetails, error) 
+		GetUserCartByCustomer(ctx context.Context, tx *gorm.DB, customerId string) (dto.GetUserCartResults, error)
 	}
 
 	orderRepository struct {
@@ -161,4 +162,77 @@ func (r *orderRepository) GetOrderById(ctx context.Context, tx *gorm.DB, orderId
 	}
 
 	return order, nil
+}
+
+func (r *orderRepository) GetUserCartByCustomer(ctx context.Context, tx *gorm.DB, customerId string) (dto.GetUserCartResults, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var orders []dto.OrderDetails
+
+	if err := tx.WithContext(ctx).Raw(`
+		SELECT
+			o.id,
+			o.status,
+			s.id AS "store_id",
+			s.store_name,
+			p.id AS "product_id",
+			od.id AS "order_product_id",
+			od.selected AS "order_product_selected",
+			od.quantity AS "order_product_quantity",
+			p.product_name,
+			p.price_before,
+			p.price_after,
+			p.stock,
+			o.created_at,
+			o.updated_at
+		FROM orders o
+		INNER JOIN order_product_details od ON od.order_id = o.id
+		INNER JOIN stores s ON s.id = o.store_id
+		INNER JOIN products p ON p.id = od.product_id
+		WHERE o.customer_id = ?
+		AND o.status IN ('in-cart-selected', 'in-cart-unselected')
+	`, customerId).Scan(&orders).Error; err != nil {
+		return dto.GetUserCartResults{}, err
+	}
+
+	var result dto.GetUserCartResults
+	var totalPrice float64
+	var products []dto.ProductDetailsInCart
+	var store dto.Store
+
+	for _, order := range orders {
+		store = dto.Store{
+			ID:          order.StoreID,
+			DisplayName: order.StoreName,
+		}
+
+		if order.OrderProductSelected {
+			products = append(products, dto.ProductDetailsInCart{
+				ID:           order.ProductID,
+				Selected:     order.OrderProductSelected,
+				Quantity:     order.OrderProductQuantity,
+				ProductName:  order.ProductName,
+				PriceBefore:  order.PriceBefore,
+				PriceAfter:   order.PriceAfter,
+				Stock:        order.Stock,
+				ImageUrl:     "",
+			})
+
+			totalPrice += order.PriceAfter * float64(order.OrderProductQuantity)
+		}
+	}
+
+	result.Orders = append(result.Orders, dto.OrderCart{
+		ID:     orders[0].ID,  
+		Status: orders[0].Status,
+		Store:  store,
+		Products: products,
+		TotalPrice: totalPrice,
+	})
+
+	result.TotalPrice = totalPrice 
+
+	return result, nil
 }

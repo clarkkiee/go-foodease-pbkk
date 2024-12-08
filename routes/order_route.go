@@ -10,7 +10,8 @@ import (
 
 func Order(route *gin.Engine, orderController controller.OrderController, jwtService service.JWTService) {
 	routes := route.Group("/api/order")
-	{
+	{	
+		routes.GET("/", middleware.Authenticate(jwtService), orderController.GetCustomerCart)
 		routes.POST("/add", middleware.Authenticate(jwtService), orderController.AddToCart)
 	}
 }

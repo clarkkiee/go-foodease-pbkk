@@ -137,3 +137,28 @@ func ConvertToGetOrderSchema(orderDetails []OrderDetails) Order {
 
 	return orderSchema
 }
+
+type ProductDetailsInCart struct {
+	ID string `json:"id"`
+	Selected bool `json:"selected"`
+	Quantity uint64 `json:"quantity"`
+	ProductName string `json:"product_name"`
+	PriceBefore float64 `json:"price_before"`
+	PriceAfter float64 `json:"price_after"`
+	Stock uint64 `json:"stock"`
+	ImageUrl string `json:"image_url"`
+}
+
+
+type OrderCart struct {
+	ID string `json:"id"`
+	Status string `json:"status"`
+	Store Store `json:"store"`
+	Products []ProductDetailsInCart `json:"products"`
+	TotalPrice float64 `json:"total_price"`
+}
+
+type GetUserCartResults struct {
+	Orders     []OrderCart `json:"orders"`
+	TotalPrice float64 `json:"total_price"`
+}
