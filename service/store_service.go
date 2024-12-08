@@ -13,7 +13,7 @@ import (
 
 type (
 	StoreService interface {
-		Register(ctx context.Context, req dto.StoreRegisterRequest) (dto.StoreResponse, error)
+		RegisterAccount(ctx context.Context, req dto.StoreRegisterRequest, address dto.AddressResponse) (dto.StoreResponse, error)
 		GetStoreById(ctx context.Context, customerId string) (dto.StoreResponse, error)
 		// GetCustomerByEmail(ctx context.Context, email string) (dto.CustomerResponse, error)
 		VerifyLogin(ctx context.Context, req dto.StoreLoginRequest) (dto.StoreLoginResponse, error)
@@ -82,7 +82,7 @@ func (s *storeService) DeleteAccount(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *storeService) Register(ctx context.Context, req dto.StoreRegisterRequest) (dto.StoreResponse, error) {
+func (s *storeService) RegisterAccount(ctx context.Context, req dto.StoreRegisterRequest, address dto.AddressResponse) (dto.StoreResponse, error) {
 	_, flag, _ := s.storeRepo.CheckEmail(ctx, nil, req.Email)
 	if flag{
 		return dto.StoreResponse{}, errors.New("email already exist")
@@ -92,10 +92,10 @@ func (s *storeService) Register(ctx context.Context, req dto.StoreRegisterReques
 		Email: req.Email,
 		StoreName: req.StoreName,
 		StorePassword: req.StorePassword,
-		AddressID: nil,
+		AddressID: &address.ID,
 	}
 
-	storeReg, err := s.storeRepo.RegisterStore(ctx, nil, newStore)
+	storeReg, err := s.storeRepo.RegisterAccount(ctx, nil, newStore)
 	if err != nil {
 		return dto.StoreResponse{}, err
 	}

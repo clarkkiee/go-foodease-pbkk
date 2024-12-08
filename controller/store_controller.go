@@ -1,12 +1,14 @@
 package controller
 
 import (
+	"fmt"
 	"go-foodease-be/dto"
 	"go-foodease-be/service"
 	"go-foodease-be/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type (
@@ -18,12 +20,14 @@ type (
 
 	storeController struct {
 		storeService service.StoreService
+		addressService service.AddressService
 	}
 )
 
-func NewStoreController(ss service.StoreService) StoreController {
+func NewStoreController(ss service.StoreService, as service.AddressService) StoreController {
 	return &storeController{
 		storeService: ss,
+		addressService: as,
 	}
 }
 
@@ -48,13 +52,30 @@ func (c *storeController) Login(ctx *gin.Context){
 
 func (c *storeController) Register(ctx *gin.Context) {
 	var store dto.StoreRegisterRequest
-	if err := ctx.ShouldBind(&store); err != nil {
+	
+	if err := ctx.BindJSON(&store); err != nil {
 		response := utils.BuildFailedResponse("Failed Get Data From Body", err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
+	address := dto.CreateNewAddressRequest{
+		Street: store.Address.Street,
+		Village: store.Address.Village,
+		SubDistrict: store.Address.SubDistrict,
+		City: store.Address.City,
+		Province: store.Address.Province,
+	}
+	fmt.Println(store)
+	resAddress, errAddress := c.addressService.CreateNewAddress(ctx.Request.Context(), address, uuid.Nil.String())
+	fmt.Println(resAddress)
+	
+	if errAddress != nil {
+		response := utils.BuildFailedResponse("Failed Register Store Address", errAddress.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
 
-	res, err := c.storeService.Register(ctx, store)
+	res, err := c.storeService.RegisterAccount(ctx.Request.Context(), store, resAddress)
 	if err != nil {
 		response := utils.BuildFailedResponse("Failed Register Store", err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, response)

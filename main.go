@@ -27,13 +27,20 @@ func main() {
 		addressService service.AddressService = service.NewAddressService(addressRepository, jwtService)
 		addressController controller.AddressController = controller.NewAddressController(addressService)
 
+		categoryRepository repository.CategoryRepository = repository.NewCategoryRepository(db)
+		categoryService service.CategoryService = service.NewCategoryService(categoryRepository)
+
 		productRepository repository.ProductRepository = repository.NewProductRepository(db)
 		productService service.ProductService = service.NewProductService(productRepository, jwtService)
-		productController controller.ProductController = controller.NewProductController(productService)
+		productController controller.ProductController = controller.NewProductController(productService, categoryService)
 		
 		storeRepository repository.StoreRepository = repository.NewStoreRepository(db)
 		storeService service.StoreService = service.NewStoreService(storeRepository, jwtService)
-		storeController controller.StoreController = controller.NewStoreController(storeService)
+		storeController controller.StoreController = controller.NewStoreController(storeService, addressService)
+
+		orderRepository repository.OrderRepository = repository.NewOrderRepository(db)
+		orderService service.OrderService = service.NewOrderService(orderRepository, productRepository)
+		orderController controller.OrderController = controller.NewOrderController(orderService, productService)
 	)
 
 	server := gin.Default()
@@ -43,6 +50,7 @@ func main() {
 	routes.Address(server,addressController, jwtService)
 	routes.Product(server, productController, jwtService)
 	routes.Store(server, storeController, jwtService)
+	routes.Order(server, orderController, jwtService)
 
 	server.Static("/assets", "./assets")
 	port := os.Getenv("PORT")

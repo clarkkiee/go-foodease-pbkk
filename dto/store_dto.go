@@ -3,6 +3,8 @@ package dto
 import (
 	// "time"
 
+
+
 	"github.com/google/uuid"
 )
 
@@ -26,10 +28,10 @@ type (
 
 	StoreRegisterRequest struct {
 		Email string `json:"email" form:"email" binding:"required"`
-		// Description string `json:"description"`
 		StoreName string `json:"store_name" form:"store_name" binding:"required"`
 		StorePassword string `json:"store_password" form:"store_password" binding:"required"`
-		AddressID *uuid.UUID `json:"address_id,omitempty"`
-		// FreeTime time.Time `json:"free_time`
+		StorePasswordConfirm string `json:"store_password_confirm" form:"store_password_confirm" binding:"required"`
+		FreeTime string `json:"free_time" form:"free_time" binding:"required"`
+		Address CreateNewAddressRequest `json:"address" form:"address" binding:"required"`
 	}
 )

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	// "fmt"
 	"go-foodease-be/dto"
 	"go-foodease-be/service"
 	"go-foodease-be/utils"
@@ -43,7 +44,7 @@ func (c *addressController) CreateNewAddress(ctx *gin.Context){
 	}
 
 	var req dto.CreateNewAddressRequest
-
+	// fmt.Println(req.Street)
 	if err := ctx.ShouldBind(&req); err != nil {
 		response := utils.BuildFailedResponse("invalid create address request schema", err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, response)

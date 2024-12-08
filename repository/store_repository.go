@@ -10,7 +10,7 @@ import (
 
 type (
 	StoreRepository interface {
-		RegisterStore(ctx context.Context, tx *gorm.DB, store models.Store) (models.Store, error)
+		RegisterAccount(ctx context.Context, tx *gorm.DB, store models.Store) (models.Store, error)
 		GetStoreById(ctx context.Context, tx *gorm.DB, customerId string) (models.Store, error)
 		// GetCustomerByEmail(ctx context.Context, tx *gorm.DB, email string) (models.Customer, error)
 		CheckEmail(ctx context.Context, tx *gorm.DB, email string) (models.Store, bool, error)
@@ -28,7 +28,7 @@ func NewStoreRepository(db *gorm.DB) StoreRepository {
 	}
 }
 
-func (r *storeRepository) RegisterStore(ctx context.Context, tx *gorm.DB, store models.Store) (models.Store, error) {
+func (r *storeRepository) RegisterAccount(ctx context.Context, tx *gorm.DB, store models.Store) (models.Store, error) {
 	if tx == nil {
 		tx = r.db
 	}
