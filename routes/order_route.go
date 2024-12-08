@@ -12,6 +12,5 @@ func Order(route *gin.Engine, orderController controller.OrderController, jwtSer
 	routes := route.Group("/api/order")
 	{
 		routes.POST("/add", middleware.Authenticate(jwtService), orderController.AddToCart)
-
 	}
 }
