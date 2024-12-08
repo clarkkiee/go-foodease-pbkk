@@ -15,7 +15,7 @@ type ProductController interface {
 
     DeleteProduct(ctx *gin.Context) // Menambahkan metode DeleteProduct
 	GetProductById(ctx *gin.Context) 
-
+	GetProductByStoreId(ctx *gin.Context)
 }
 
 type productController struct {
@@ -123,7 +123,20 @@ func (c *productController) GetProductById(ctx *gin.Context) {
 		return 
 	}
 
+	response := utils.BuildSuccessResponse("Get Product Successfully", res)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (c *productController) GetProductByStoreId(ctx *gin.Context) {
+	storeId := ctx.Param("store_id")
+	res, err := c.productService.GetProductByStoreId(ctx.Request.Context(), storeId)
+	if err != nil {
+		response := utils.BuildFailedResponse("Failed to get product", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return 
+	}
 
 	response := utils.BuildSuccessResponse("Get Product Successfully", res)
 	ctx.JSON(http.StatusOK, response)
 }
+

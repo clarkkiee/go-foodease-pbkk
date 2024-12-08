@@ -15,6 +15,7 @@ func Product(route *gin.Engine, productController controller.ProductController, 
         routes.POST("/create", middleware.Authenticate(jwtService), productController.CreateProduct)
         routes.PUT("/update/:product_id", middleware.Authenticate(jwtService), productController.UpdateProduct)
         routes.GET("/:product_id", middleware.Authenticate(jwtService), productController.GetProductById)
+        routes.GET("/store/:store_id", middleware.Authenticate(jwtService), productController.GetProductByStoreId)
     }
 
 }

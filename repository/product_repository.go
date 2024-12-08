@@ -15,6 +15,7 @@ type ProductRepository interface {
 	DeleteProduct(ctx context.Context, productID string, storeID string) error
 	GetMinimumProduct(ctx context.Context, tx *gorm.DB, productId string) (dto.GetMinimumProductResult, error)
 	GetProductById(ctx context.Context, tx *gorm.DB, productId string) (models.Product, error)
+	GetProductByStoreId(ctx context.Context, tx *gorm.DB, storeId string) ([]models.Product, error)
 }
 
 type productRepository struct {
@@ -59,7 +60,7 @@ func (r *productRepository) UpdateProduct(ctx context.Context, productID string,
 }
 
 
-  func (r *productRepository) GetProductById(ctx context.Context, tx *gorm.DB, productId string) (models.Product, error) {
+func (r *productRepository) GetProductById(ctx context.Context, tx *gorm.DB, productId string) (models.Product, error) {
 
 	if tx == nil {
 		tx = r.db
@@ -106,4 +107,16 @@ func (r *productRepository) DeleteProduct(ctx context.Context, productID string,
     return nil
 }
 
+func (r *productRepository) GetProductByStoreId(ctx context.Context, tx *gorm.DB, storeId string) ([]models.Product, error) {
 
+	if tx == nil {
+		tx = r.db
+	}
+
+	var product []models.Product
+	if err := tx.WithContext(ctx).Model(&models.Product{}).Where("store_id = ?", storeId).Find(&product).Scan(&product).Error; err != nil {
+		return []models.Product{}, err
+	}
+
+	return product, nil
+}
