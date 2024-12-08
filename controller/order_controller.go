@@ -38,5 +38,13 @@ func (c *orderController) AddToCart(ctx *gin.Context) {
 	}
 
 
-	c.orderService.AddToCart(ctx.Request.Context(), customerId, productReq.ProductId)	
+	res, err := c.orderService.AddToCart(ctx.Request.Context(), customerId, productReq.ProductId)	
+	if err != nil {
+		response := utils.BuildFailedResponse("failed to add product to cart", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	response := utils.BuildSuccessResponse("success to add product to cart", res)
+	ctx.JSON(http.StatusOK, response)
 }

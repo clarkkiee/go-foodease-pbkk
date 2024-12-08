@@ -1,6 +1,12 @@
 package dto
 
-import "github.com/google/uuid"
+import (
+	// "time"
+
+
+
+	"github.com/google/uuid"
+)
 
 type (
 	StoreResponse struct {
@@ -20,4 +26,12 @@ type (
 		ID string `json:"id"`
 	}
 
+	StoreRegisterRequest struct {
+		Email string `json:"email" form:"email" binding:"required"`
+		StoreName string `json:"store_name" form:"store_name" binding:"required"`
+		StorePassword string `json:"store_password" form:"store_password" binding:"required"`
+		StorePasswordConfirm string `json:"store_password_confirm" form:"store_password_confirm" binding:"required"`
+		FreeTime string `json:"free_time" form:"free_time" binding:"required"`
+		Address CreateNewAddressRequest `json:"address" form:"address" binding:"required"`
+	}
 )

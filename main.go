@@ -39,7 +39,7 @@ func main() {
 		storeController controller.StoreController = controller.NewStoreController(storeService, addressService)
 
 		orderRepository repository.OrderRepository = repository.NewOrderRepository(db)
-		orderService service.OrderService = service.NewOrderService(orderRepository, productRepository)
+		orderService service.OrderService = service.NewOrderService(orderRepository, productRepository, db)
 		orderController controller.OrderController = controller.NewOrderController(orderService, productService)
 	)
 

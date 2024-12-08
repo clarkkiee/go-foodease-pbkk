@@ -2,49 +2,66 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"go-foodease-be/dto"
 	"go-foodease-be/repository"
+
+	"gorm.io/gorm"
 )
 
 type (
 	OrderService interface {
-		AddToCart(ctx context.Context, customerId string, productId string) ()
+		AddToCart(ctx context.Context, customerId string, productId string) (dto.Order, error)
 	}
 
 	orderService struct {
 		orderRepo repository.OrderRepository
 		productRepo repository.ProductRepository
+		db *gorm.DB
 	}
 )
 
-func NewOrderService(orderRepo repository.OrderRepository, productRepo repository.ProductRepository) OrderService {
+func NewOrderService(orderRepo repository.OrderRepository, productRepo repository.ProductRepository, db *gorm.DB) OrderService {
 	return &orderService{
 		orderRepo: orderRepo,
 		productRepo: productRepo,
+		db: db,
 	}
 }
 
-func (s *orderService) AddToCart(ctx context.Context, customerId string, productId string) () {
+func (s *orderService) AddToCart(ctx context.Context, customerId string, productId string) (dto.Order, error) {
 	
 	//cek produk ada atau tidak, cek juga stock nya
 	product, err := s.productRepo.GetMinimumProduct(ctx, nil, productId)
 	if err != nil {
-		return
+		return dto.Order{}, err
 	}
 
+	if product.Stock <= 0 {
+		return dto.Order{}, errors.New("product is sold out")
+	}
+
+	tx := s.db.Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+		}
+	}()
+
 	//cek apakah sudah ada order di cart (by customer id dan store id)
-	order, err := s.orderRepo.GetOrderInCart(ctx, nil, product.StoreID, customerId)
+	order, err := s.orderRepo.GetOrderInCart(ctx, tx, product.StoreID, customerId)
 	if err != nil {
-		return
+		tx.Rollback()
+		return dto.Order{}, err
 	}
 
 	//jika tidak ada record, buat record order baru 
 	//jika sudah ada, ambil order id nya saja
 	orderID := ""
-	if orderID == "" || len(order) == 0 {
+	if order == "" || len(order) == 0 {
 		//buat record order 
-		newOrderId, _ := s.orderRepo.CreateNewOrder(ctx, nil, product.StoreID, customerId)
+		newOrderId, _ := s.orderRepo.CreateNewOrder(ctx, tx, product.StoreID, customerId)
 		orderID = newOrderId
 	} else {
 		//simpan order id nya
@@ -52,17 +69,19 @@ func (s *orderService) AddToCart(ctx context.Context, customerId string, product
 	}
 
 	//cek data di order apakah sudah ada produk yang dimaksud di order cart
-	orderProduct, err := s.orderRepo.GetOrderProduct(ctx, nil, customerId, orderID, product.ID)
+	orderProduct, err := s.orderRepo.GetOrderProduct(ctx, tx, customerId, orderID, product.ID)
 	if err != nil {
-		return 
+		tx.Rollback()
+		return dto.Order{}, err
 	}
 
 	var orderProductID string
 	if orderProduct == (dto.GetOrderProductResult{}) {
 		//jika belum ada, buat record order product baru
-		newOrderProductID, err := s.orderRepo.CreateOrderProduct(ctx, nil, orderID, product.ID)
+		newOrderProductID, err := s.orderRepo.CreateOrderProduct(ctx, tx, orderID, product.ID)
 		if err != nil {
-			return
+			tx.Rollback()
+			return dto.Order{}, err
 		}
 		orderProductID = newOrderProductID
 		// orderProductID
@@ -73,13 +92,29 @@ func (s *orderService) AddToCart(ctx context.Context, customerId string, product
 		//jika quantity > error, stok tidak cukup
 		if orderProduct.Quantity >= product.Stock {
 			// rollback
-			return
+			tx.Rollback()
+			return dto.Order{}, err
 		} else {
 			// increase order product qty
-			s.orderRepo.IncreaseOrderProductQuantity(ctx, nil, customerId, orderID, product.ID)
+			_, err := s.orderRepo.IncreaseOrderProductQuantity(ctx, tx, customerId, orderID, product.ID)
+			if err != nil {
+				tx.Rollback()
+				return dto.Order{}, err
+			}
 		}
 		fmt.Print(orderProductID)
 	}
-
 	//terakhir -> dapatkan data order yang baru saja dibuat by ID
+
+	newOrderProduct, err := s.orderRepo.GetOrderById(ctx, tx, orderID)
+	if err != nil {
+		tx.Rollback()
+		return dto.Order{}, err
+	}
+
+	tx.Commit()
+
+	formattedRes := dto.ConvertToGetOrderSchema([]dto.OrderDetails{newOrderProduct})
+
+	return formattedRes, nil
 }

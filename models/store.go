@@ -15,7 +15,7 @@ type Store struct {
 	Description string    `json:"description"`
 	StorePassword string  `gorm:"column:store_password" json:"store_password"`
 	AddressID   *uuid.UUID `gorm:"type:uuid;default:null" json:"address_id"`
-	FreeTime    string    `json:"free_time"`
+	FreeTime    time.Time    `json:"free_time"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
