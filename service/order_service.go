@@ -12,7 +12,7 @@ import (
 
 type (
 	OrderService interface {
-		AddToCart(ctx context.Context, customerId string, productId string) (dto.OrderDetails, error)
+		AddToCart(ctx context.Context, customerId string, productId string) (dto.Order, error)
 	}
 
 	orderService struct {
@@ -30,16 +30,16 @@ func NewOrderService(orderRepo repository.OrderRepository, productRepo repositor
 	}
 }
 
-func (s *orderService) AddToCart(ctx context.Context, customerId string, productId string) (dto.OrderDetails, error) {
+func (s *orderService) AddToCart(ctx context.Context, customerId string, productId string) (dto.Order, error) {
 	
 	//cek produk ada atau tidak, cek juga stock nya
 	product, err := s.productRepo.GetMinimumProduct(ctx, nil, productId)
 	if err != nil {
-		return dto.OrderDetails{}, err
+		return dto.Order{}, err
 	}
 
 	if product.Stock <= 0 {
-		return dto.OrderDetails{}, errors.New("product is sold out")
+		return dto.Order{}, errors.New("product is sold out")
 	}
 
 	tx := s.db.Begin()
@@ -53,7 +53,7 @@ func (s *orderService) AddToCart(ctx context.Context, customerId string, product
 	order, err := s.orderRepo.GetOrderInCart(ctx, tx, product.StoreID, customerId)
 	if err != nil {
 		tx.Rollback()
-		return dto.OrderDetails{}, err
+		return dto.Order{}, err
 	}
 
 	//jika tidak ada record, buat record order baru 
@@ -72,7 +72,7 @@ func (s *orderService) AddToCart(ctx context.Context, customerId string, product
 	orderProduct, err := s.orderRepo.GetOrderProduct(ctx, tx, customerId, orderID, product.ID)
 	if err != nil {
 		tx.Rollback()
-		return dto.OrderDetails{}, err
+		return dto.Order{}, err
 	}
 
 	var orderProductID string
@@ -81,7 +81,7 @@ func (s *orderService) AddToCart(ctx context.Context, customerId string, product
 		newOrderProductID, err := s.orderRepo.CreateOrderProduct(ctx, tx, orderID, product.ID)
 		if err != nil {
 			tx.Rollback()
-			return dto.OrderDetails{}, err
+			return dto.Order{}, err
 		}
 		orderProductID = newOrderProductID
 		// orderProductID
@@ -93,13 +93,13 @@ func (s *orderService) AddToCart(ctx context.Context, customerId string, product
 		if orderProduct.Quantity >= product.Stock {
 			// rollback
 			tx.Rollback()
-			return dto.OrderDetails{}, err
+			return dto.Order{}, err
 		} else {
 			// increase order product qty
 			_, err := s.orderRepo.IncreaseOrderProductQuantity(ctx, tx, customerId, orderID, product.ID)
 			if err != nil {
 				tx.Rollback()
-				return dto.OrderDetails{}, err
+				return dto.Order{}, err
 			}
 		}
 		fmt.Print(orderProductID)
@@ -109,10 +109,12 @@ func (s *orderService) AddToCart(ctx context.Context, customerId string, product
 	newOrderProduct, err := s.orderRepo.GetOrderById(ctx, tx, orderID)
 	if err != nil {
 		tx.Rollback()
-		return dto.OrderDetails{}, err
+		return dto.Order{}, err
 	}
 
 	tx.Commit()
 
-	return newOrderProduct, nil
+	formattedRes := dto.ConvertToGetOrderSchema([]dto.OrderDetails{newOrderProduct})
+
+	return formattedRes, nil
 }
