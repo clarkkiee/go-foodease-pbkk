@@ -16,6 +16,7 @@ type (
 		Login(ctx *gin.Context)
 		Register(ctx *gin.Context)
 		DeleteAccount(ctx *gin.Context)
+		Me(ctx *gin.Context)
 	}
 
 	storeController struct {
@@ -99,3 +100,11 @@ func (c *storeController) DeleteAccount(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+func (c *storeController) Me(ctx *gin.Context) {
+	storeId := ctx.MustGet("id").(string)	
+	customer, err := c.storeService.GetStoreById(ctx.Request.Context(), storeId)
+	if err != nil {
+		fmt.Println(err)
+	}
+	ctx.JSON(200, customer)
+}

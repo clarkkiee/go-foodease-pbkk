@@ -131,7 +131,7 @@ func (c *productController) GetProductById(ctx *gin.Context) {
 }
 
 func (c *productController) GetProductByStoreId(ctx *gin.Context) {
-	storeId := ctx.Param("store_id")
+	storeId := ctx.MustGet("id").(string)
 	res, err := c.productService.GetProductByStoreId(ctx.Request.Context(), storeId)
 	if err != nil {
 		response := utils.BuildFailedResponse("Failed to get product", err.Error(), nil)
