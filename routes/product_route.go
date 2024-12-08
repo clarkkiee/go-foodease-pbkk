@@ -16,6 +16,7 @@ func Product(route *gin.Engine, productController controller.ProductController, 
         routes.PUT("/update/:product_id", middleware.Authenticate(jwtService), productController.UpdateProduct)
         routes.GET("/:product_id", middleware.Authenticate(jwtService), productController.GetProductById)
         routes.GET("/store/:store_id", middleware.Authenticate(jwtService), productController.GetProductByStoreId)
+        routes.GET("/customer/:customer_id?limit=20&offset=0&distance=20000", middleware.Authenticate(jwtService), productController.GetNearestProduct)
     }
 
 }

@@ -16,17 +16,20 @@ type ProductController interface {
     DeleteProduct(ctx *gin.Context) // Menambahkan metode DeleteProduct
 	GetProductById(ctx *gin.Context) 
 	GetProductByStoreId(ctx *gin.Context)
+	GetNearestProduct(ctx *gin.Context)
 }
 
 type productController struct {
 	productService service.ProductService
 	categoryService service.CategoryService
+	addressService service.AddressService
 }
 
-func NewProductController(ps service.ProductService, cs service.CategoryService) ProductController {
+func NewProductController(ps service.ProductService, cs service.CategoryService, as service.AddressService) ProductController {
 	return &productController{
 		productService: ps,
 		categoryService: cs,
+		addressService: as,
 	}
 }
 
@@ -130,6 +133,35 @@ func (c *productController) GetProductById(ctx *gin.Context) {
 func (c *productController) GetProductByStoreId(ctx *gin.Context) {
 	storeId := ctx.Param("store_id")
 	res, err := c.productService.GetProductByStoreId(ctx.Request.Context(), storeId)
+	if err != nil {
+		response := utils.BuildFailedResponse("Failed to get product", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return 
+	}
+
+	response := utils.BuildSuccessResponse("Get Product Successfully", res)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (c *productController) GetNearestProduct(ctx *gin.Context) {
+	customerId := ctx.MustGet("id").(string)
+	limit := ctx.Query("limit")
+	offset := ctx.Query("offset")
+	maxDistance := ctx.Query("distance")
+
+	customerAddress, err := c.addressService.GetActiveAddress(ctx.Request.Context(), customerId)
+	if err != nil {
+		response := utils.BuildFailedResponse("Failed to get customer location", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return 
+	}
+	
+	customerCoord := dto.CoordinatesResponse{
+		Longitude: customerAddress.Longitude,
+		Latitude: customerAddress.Latitude,
+	}
+
+	res, err := c.productService.GetNearestProduct(ctx.Request.Context(), customerCoord, limit, offset, maxDistance)
 	if err != nil {
 		response := utils.BuildFailedResponse("Failed to get product", err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, response)
