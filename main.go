@@ -32,7 +32,7 @@ func main() {
 
 		productRepository repository.ProductRepository = repository.NewProductRepository(db)
 		productService service.ProductService = service.NewProductService(productRepository, jwtService)
-		productController controller.ProductController = controller.NewProductController(productService, categoryService)
+		productController controller.ProductController = controller.NewProductController(productService, categoryService, addressService)
 		
 		storeRepository repository.StoreRepository = repository.NewStoreRepository(db)
 		storeService service.StoreService = service.NewStoreService(storeRepository, jwtService)
