@@ -26,10 +26,8 @@ type (
 
 	StoreRegisterRequest struct {
 		Email string `json:"email" form:"email" binding:"required"`
-		// Description string `json:"description"`
 		StoreName string `json:"store_name" form:"store_name" binding:"required"`
 		StorePassword string `json:"store_password" form:"store_password" binding:"required"`
-		AddressID *uuid.UUID `json:"address_id,omitempty"`
-		// FreeTime time.Time `json:"free_time`
+		AddressId *uuid.UUID `json:"address_id"`
 	}
 )

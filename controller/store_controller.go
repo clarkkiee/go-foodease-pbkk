@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"go-foodease-be/dto"
 	"go-foodease-be/service"
 	"go-foodease-be/utils"
@@ -50,13 +51,23 @@ func (c *storeController) Login(ctx *gin.Context){
 
 func (c *storeController) Register(ctx *gin.Context) {
 	var store dto.StoreRegisterRequest
+	var address dto.CreateNewAddressRequest
+
 	if err := ctx.ShouldBind(&store); err != nil {
 		response := utils.BuildFailedResponse("Failed Get Data From Body", err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	res, err := c.storeService.Register(ctx, store)
+	resAddress, errAddress := c.addressService.CreateNewStoreAddress(ctx, address)
+	fmt.Println(resAddress)
+	if errAddress != nil {
+		response := utils.BuildFailedResponse("Failed Register Store Address", errAddress.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	res, err := c.storeService.RegisterAccount(ctx, store, resAddress)
 	if err != nil {
 		response := utils.BuildFailedResponse("Failed Register Store", err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, response)

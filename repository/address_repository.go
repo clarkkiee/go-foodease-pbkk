@@ -64,11 +64,13 @@ func (r *addressRepository) ProduceCordFromText(ctx context.Context, tx *gorm.DB
 	json.Unmarshal(body, &apiResponse)
 	
 	var coords types.Coordinates
+	
 	if len(apiResponse.Items) > 0 {
 		position := apiResponse.Items[0].Position
 		coords.Latitude = position.Lat
 		coords.Longitude = position.Lng
 	} else {
+		fmt.Println(coords)
 		return &types.Coordinates{}, errors.New("failed to fetch coordinates data")
 	}
 	
