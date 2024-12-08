@@ -2,16 +2,18 @@ package service
 
 import (
 	"context"
+	"errors"
 	// "errors"
 	"go-foodease-be/dto"
 	"go-foodease-be/helpers"
-	// "go-foodease-be/models"
+
+	"go-foodease-be/models"
 	"go-foodease-be/repository"
 )
 
 type (
 	StoreService interface {
-		// Register(ctx context.Context, req dto.CustomerRegisterRequest) (dto.CustomerResponse, error)
+		RegisterAccount(ctx context.Context, req dto.StoreRegisterRequest, address dto.AddressResponse) (dto.StoreResponse, error)
 		GetStoreById(ctx context.Context, customerId string) (dto.StoreResponse, error)
 		// GetCustomerByEmail(ctx context.Context, email string) (dto.CustomerResponse, error)
 		VerifyLogin(ctx context.Context, req dto.StoreLoginRequest) (dto.StoreLoginResponse, error)
@@ -78,4 +80,30 @@ func (s *storeService) DeleteAccount(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func (s *storeService) RegisterAccount(ctx context.Context, req dto.StoreRegisterRequest, address dto.AddressResponse) (dto.StoreResponse, error) {
+	_, flag, _ := s.storeRepo.CheckEmail(ctx, nil, req.Email)
+	if flag{
+		return dto.StoreResponse{}, errors.New("email already exist")
+	}
+
+	newStore := models.Store{
+		Email: req.Email,
+		StoreName: req.StoreName,
+		StorePassword: req.StorePassword,
+		AddressID: &address.ID,
+	}
+
+	storeReg, err := s.storeRepo.RegisterAccount(ctx, nil, newStore)
+	if err != nil {
+		return dto.StoreResponse{}, err
+	}
+
+	return dto.StoreResponse{
+		ID: storeReg.ID,
+		Email: storeReg.Email,
+		StoreName: storeReg.StoreName,
+		AddressId: storeReg.AddressID,
+	}, nil
 }
