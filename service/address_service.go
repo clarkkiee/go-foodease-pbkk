@@ -192,3 +192,12 @@ func (s *addressService) SetActiveAddress(ctx context.Context, addressId string,
 
 	return updatedAddr, nil
 }
+
+func (s *addressService) GetUserActiveCoordinates(ctx context.Context, userId string) (dto.UserActiveCoordinatesResult, error) {
+	res, err := s.addressRepo.GetUserActiveCoordinates(ctx, nil, userId)
+	if err != nil {
+		return dto.UserActiveCoordinatesResult{}, err
+	}
+
+	return res, nil
+}

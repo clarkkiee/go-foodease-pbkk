@@ -31,7 +31,7 @@ func main() {
 		categoryService service.CategoryService = service.NewCategoryService(categoryRepository)
 
 		productRepository repository.ProductRepository = repository.NewProductRepository(db)
-		productService service.ProductService = service.NewProductService(productRepository, jwtService)
+		productService service.ProductService = service.NewProductService(productRepository, addressRepository, jwtService)
 		productController controller.ProductController = controller.NewProductController(productService, categoryService, addressService)
 		
 		storeRepository repository.StoreRepository = repository.NewStoreRepository(db)

@@ -43,4 +43,9 @@ type (
 		UpdatedAt time.Time `json:"updated_at"`
 	}
 
+	UserActiveCoordinatesResult struct {
+		ID string `json:"id"`
+		Coordinates string `json:"coordinates"`
+	}
+
 )

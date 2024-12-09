@@ -29,6 +29,7 @@ type (
 		DeleteAddressById(ctx context.Context, tx *gorm.DB, addressId string) error
 		GetActiveAddress(ctx context.Context, tx *gorm.DB, entityId string) (dto.AddressResponse, error)
 		SetActiveAddress(ctx context.Context, tx *gorm.DB, addressId string, customerId string) error
+		GetUserActiveCoordinates(ctx context.Context, tx *gorm.DB, userId string) (dto.UserActiveCoordinatesResult, error) 
 	}
 
 	addressRepository struct {
@@ -235,4 +236,20 @@ func (r *addressRepository) SetActiveAddress(ctx context.Context, tx *gorm.DB, a
 	}
 
 	return nil
+}
+
+func (r *addressRepository) GetUserActiveCoordinates(ctx context.Context, tx *gorm.DB, userId string) (dto.UserActiveCoordinatesResult, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var res dto.UserActiveCoordinatesResult
+
+	subQuery := tx.WithContext(ctx).Model(&models.Customer{}).Select("active_address_id").Where("id = ?", userId)
+	if err := tx.WithContext(ctx).Model(&models.Address{}).Select("id", "coordinates").Where("id = (?)", subQuery).Take(&res).Error; err != nil {
+		return dto.UserActiveCoordinatesResult{}, err
+	}
+
+	return res, nil
+
 }

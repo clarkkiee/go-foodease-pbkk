@@ -5,6 +5,7 @@ import (
 	"go-foodease-be/dto"
 	"go-foodease-be/models"
 	"go-foodease-be/repository"
+	"os"
 
 	"github.com/google/uuid"
 )
@@ -17,18 +18,21 @@ type (
 		DeleteProduct(ctx context.Context, productID string, storeID string) error  
 		GetProductById(ctx context.Context, productId string) (dto.ProductResponse, error)
 		GetProductByStoreId(ctx context.Context, storeId string) ([]dto.ProductResponse, error)
-		GetNearestProduct(ctx context.Context, customerCoord dto.CoordinatesResponse, limit string, offset string, distance string) ([]dto.ProductResponse, error)
+		GetNearestProduct(ctx context.Context, userId string, limit string, offset string, distance string) ([]dto.GetProductResponse, error)
+		GetPublicNearestProduct(ctx context.Context, limit string, offset string, distance string) ([]dto.GetProductResponse, error) 
 	}
 
 	productService struct {
 		productRepo repository.ProductRepository
+		addressRepo repository.AddressRepository
 		jwtService  JWTService
 	}
 )
 
-func NewProductService(productRepo repository.ProductRepository, jwtService JWTService) ProductService {
+func NewProductService(productRepo repository.ProductRepository, addressRepo repository.AddressRepository, jwtService JWTService) ProductService {
 	return &productService{
 		productRepo: productRepo,
+		addressRepo: addressRepo,
 		jwtService:  jwtService,
 	}
 }
@@ -159,32 +163,40 @@ func (s *productService) GetProductByStoreId(ctx context.Context, storeId string
 	return res, nil
 }
 
-func (s *productService) GetNearestProduct(ctx context.Context, customerCoord dto.CoordinatesResponse, limit string, offset string, distance string) ([]dto.ProductResponse, error) {
-	product, err := s.productRepo.GetNearestProduct(ctx, nil, customerCoord, limit, offset, distance)
+func (s *productService) GetNearestProduct(ctx context.Context, userId string, limit string, offset string, distance string) ([]dto.GetProductResponse, error) {
+	
+	var coordinates string
+
+	coords, err := s.addressRepo.GetUserActiveCoordinates(ctx, nil, userId)
 	if err != nil {
-		return []dto.ProductResponse{}, err
+		return nil, err
+	}
+	coordinates = coords.Coordinates
+
+	product, err := s.productRepo.GetNearestProduct(ctx, nil, coordinates, limit, offset, distance)
+	if err != nil {
+		return []dto.GetProductResponse{}, err
 	}
 
-	var res []dto.ProductResponse
+	return product, nil
+}
 
-	for _, item := range product {
-		temp := dto.ProductResponse {
-			ID: item.ID.String(),
-			ProductName: item.ProductName,
-			Description: item.Description,
-			PriceBefore: item.PriceBefore,
-			PriceAfter: item.PriceAfter,
-			ProductionTime: item.ProductionTime,
-			ExpiredTime: item.ExpiredTime,
-			Stock: item.Stock,
-			CategoryID: item.CategoryID.String(),
-			ImageID: item.ImageID.String(),
-			CreatedAt: item.CreatedAt,
-			UpdatedAt: item.UpdatedAt,
-		}
+func (s *productService) GetPublicNearestProduct(ctx context.Context, limit string, offset string, distance string) ([]dto.GetProductResponse, error) {
 
-		res = append(res, temp)
+	defaultAddr := os.Getenv("DEFAULT_ADDRESS_ID")
+
+	var coordinates string
+
+	coords, err := s.addressRepo.GetUserActiveCoordinates(ctx, nil, defaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	coordinates = coords.Coordinates
+
+	product, err := s.productRepo.GetNearestProduct(ctx, nil, coordinates, limit, offset, distance)
+	if err != nil {
+		return []dto.GetProductResponse{}, err
 	}
 
-	return res, nil
+	return product, nil
 }

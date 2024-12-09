@@ -16,7 +16,7 @@ type ProductRepository interface {
 	GetMinimumProduct(ctx context.Context, tx *gorm.DB, productId string) (dto.GetMinimumProductResult, error)
 	GetProductById(ctx context.Context, tx *gorm.DB, productId string) (models.Product, error)
 	GetProductByStoreId(ctx context.Context, tx *gorm.DB, storeId string) ([]models.Product, error)
-	GetNearestProduct(ctx context.Context, tx *gorm.DB, customerCoord dto.CoordinatesResponse, limit string, offset string, distance string) ([]models.Product, error)
+	GetNearestProduct(ctx context.Context, tx *gorm.DB, customerCoord string, limit string, offset string, distance string) ([]dto.GetProductResponse, error)
 }
 
 type productRepository struct {
@@ -122,12 +122,12 @@ func (r *productRepository) GetProductByStoreId(ctx context.Context, tx *gorm.DB
 	return product, nil
 }
 
-func (r *productRepository) GetNearestProduct(ctx context.Context, tx *gorm.DB, customerCoord dto.CoordinatesResponse, limit string, offset string, distance string) ([]models.Product, error){
+func (r *productRepository) GetNearestProduct(ctx context.Context, tx *gorm.DB, customerCoord string, limit string, offset string, distance string) ([]dto.GetProductResponse, error){
 	if tx == nil {
 		tx = r.db
 	}
 
-	var product []models.Product
+	var product []dto.GetProductResponse
 	err := tx.Raw(`SELECT
 		p.id,
 		p.product_name,
@@ -142,25 +142,25 @@ func (r *productRepository) GetNearestProduct(ctx context.Context, tx *gorm.DB, 
 		a.street,
 		ST_X(a.coordinates::geometry) as "address_longitude",
 		ST_Y(a.coordinates::geometry) as "address_latitude",
-		ST_DISTANCE(a.coordinates, :user_coordinates) as "address_distance",
+		ST_DISTANCE(a.coordinates, ?) as "address_distance",
 		c.slug,
 		c.category_name,
 		p.updated_at,
 		p.created_at
-	FROM product p 
-	INNER JOIN store s ON p.store_id = s.id
-	INNER JOIN address a ON a.id = s.address_id
-	INNER JOIN category c ON c.id = p.category_id
+	FROM products p 
+	INNER JOIN stores s ON p.store_id = s.id
+	INNER JOIN addresses a ON a.id = s.address_id
+	INNER JOIN categories c ON c.id = p.category_id
 	WHERE 
-		ST_DISTANCE(a.coordinates, :?) < :?
+		ST_DISTANCE(a.coordinates, ?) < ?
 	ORDER BY
-		ST_DISTANCE(a.coordinates, :?) ASC,
+		ST_DISTANCE(a.coordinates, ?) ASC,
 		p.id ASC,
 		p.updated_at DESC
-	LIMIT :? OFFSET :?;`, customerCoord, distance, customerCoord, limit, offset).Scan(&product).Error
+	LIMIT ? OFFSET ?;`, customerCoord, customerCoord, distance, customerCoord, limit, offset).Scan(&product).Error
 
 	if err != nil {
-		return []models.Product{}, err
+		return []dto.GetProductResponse{}, err
 	}
 
 	return product, nil

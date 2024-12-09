@@ -63,3 +63,23 @@ type GetMinimumProductResult struct {
 	CategoryID string `json:"category_id"`
 }
 
+type GetProductResponse struct {
+	ID string `json:"id"`
+	ProductName string `json:"product_name"`
+	Description string `json:"description"`
+	PriceBefore float64 `json:"price_before"`
+	PriceAfter float64 `json:"price_after"`
+	ProductionTime string `json:"production_time"`
+	ExpiredTime string `json:"expired_time"`
+	Stock uint64 `json:"stock"`
+	ImageID string `json:"image_id"`
+	StoreName string `json:"store_name"`
+	Street string `json:"street"`
+	AddressLongitude float64 `json:"address_longitude"`
+	AddressLatitude float64 `json:"address_latitude"`	
+	AddressDistance float64 `json:"address_distance"`
+	Slug string `json:"slug"`
+	CategoryName string `json:"category_name"`
+	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt time.Time `json:"created_at"`
+}

@@ -17,6 +17,7 @@ type ProductController interface {
 	GetProductById(ctx *gin.Context) 
 	GetProductByStoreId(ctx *gin.Context)
 	GetNearestProduct(ctx *gin.Context)
+	GetPublicNearestProduct(ctx *gin.Context)
 }
 
 type productController struct {
@@ -149,19 +150,7 @@ func (c *productController) GetNearestProduct(ctx *gin.Context) {
 	offset := ctx.Query("offset")
 	maxDistance := ctx.Query("distance")
 
-	customerAddress, err := c.addressService.GetActiveAddress(ctx.Request.Context(), customerId)
-	if err != nil {
-		response := utils.BuildFailedResponse("Failed to get customer location", err.Error(), nil)
-		ctx.JSON(http.StatusBadRequest, response)
-		return 
-	}
-	
-	customerCoord := dto.CoordinatesResponse{
-		Longitude: customerAddress.Longitude,
-		Latitude: customerAddress.Latitude,
-	}
-
-	res, err := c.productService.GetNearestProduct(ctx.Request.Context(), customerCoord, limit, offset, maxDistance)
+	res, err := c.productService.GetNearestProduct(ctx.Request.Context(), customerId, limit, offset, maxDistance)
 	if err != nil {
 		response := utils.BuildFailedResponse("Failed to get product", err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, response)
@@ -172,3 +161,18 @@ func (c *productController) GetNearestProduct(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+func (c *productController) GetPublicNearestProduct(ctx *gin.Context) {
+	limit := ctx.Query("limit")
+	offset := ctx.Query("offset")
+	maxDistance := ctx.Query("distance")
+
+	res, err := c.productService.GetPublicNearestProduct(ctx.Request.Context(), limit, offset, maxDistance)
+	if err != nil {
+		response := utils.BuildFailedResponse("Failed to get product", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, response)
+		return 
+	}
+
+	response := utils.BuildSuccessResponse("Get Product Successfully", res)
+	ctx.JSON(http.StatusOK, response)
+}
