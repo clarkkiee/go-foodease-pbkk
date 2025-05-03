@@ -1,0 +1,87 @@
+services:
+  api:
+    build: .
+    container_name: go-api
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - GEOCODE_SECRET_API_KEY=${GEOCODE_SECRET_API_KEY}
+      - DEFAULT_ADDRESS_ID=${DEFAULT_ADDRESS_ID}
+    expose:
+      - "8080"
+    volumes:
+      - ./logs/api:/var/log/api 
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - ./loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+      image: grafana/promtail:latest
+      container_name: promtail
+      ports:
+        - "9080:9080"
+      volumes:
+        - ./promtail-config.yml:/etc/promtail/promtail-config.yml
+        - ./logs:/var/log
+      command: -config.file=/etc/promtail/promtail-config.yml
+      depends_on:
+        - loki
+
+volumes:
+  grafana-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./grafana-data
+      o: bind
+  prometheus-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./prometheus-data
+      o: bind
+  loki-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./loki-data
+      o: bind

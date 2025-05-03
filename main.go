@@ -7,15 +7,22 @@ import (
 	"go-foodease-be/config"
 	"go-foodease-be/controller"
 	"go-foodease-be/middleware"
+	"go-foodease-be/pkg/logger"
+	"go-foodease-be/pkg/metrics"
 	"go-foodease-be/repository"
 	"go-foodease-be/routes"
 	"go-foodease-be/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
 	db := config.DatabaseConnection()
+	logger.Initialize()
+	defer logger.Sync()
+
+	metrics.Initialize()
 
 	var (
 		jwtService service.JWTService = service.NewJWTService()
@@ -45,6 +52,26 @@ func main() {
 
 	server := gin.Default()
 	server.Use(middleware.CORSMiddleware())
+	server.Use(middleware.LoggerMiddleware())
+	server.Use(middleware.MetricsMiddleware())
+
+	server.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
+
+	server.GET("/success", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "Success"})
+	})
+	server.GET("/client-error", func(c *gin.Context) {
+		c.JSON(400, gin.H{"error": "Client error"})
+	})
+	server.GET("/server-error", func(c *gin.Context) {
+		c.JSON(500, gin.H{"error": "Server error"})
+	})
+
+	server.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	routes.Customer(server, customerController, jwtService)
 	routes.Address(server,addressController, jwtService)
