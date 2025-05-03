@@ -3,3 +3,8 @@ storage/
 assets/
 volumes/
 tmp/
+
+loki-data/
+grafana-data/
+prometheus-data/
+logs/
