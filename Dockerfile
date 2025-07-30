@@ -28,6 +28,7 @@ FROM alpine:latest
 
 # Install runtime dependencies
 RUN apk --no-cache add ca-certificates tzdata
+RUN mkdir -p /var/log/api/
 
 # Set working directory
 WORKDIR /root/
