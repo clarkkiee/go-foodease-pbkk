@@ -5,7 +5,7 @@ import { check, sleep } from 'k6';
 export const options = {
   stages: [
     { duration: '30s', target: 10 }, // Ramp-up to 10 VUs over 30 seconds
-    { duration: '1m', target: 50 }, // Stay at 50 VUs for 1 minute
+    { duration: '10m', target: 100 }, // Stay at 50 VUs for 1 minute
     { duration: '30s', target: 0 }, // Ramp-down to 0 VUs over 30 seconds
   ],
 };
