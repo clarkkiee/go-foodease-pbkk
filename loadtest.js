@@ -11,7 +11,12 @@ export const options = {
 };
 
 // Base URL of your API
-const BASE_URL = 'http://localhost:8080';
+let BASE_URL;
+if (__ENV.ENVIRONMENT == "production") {
+  BASE_URL = "api.clarkkiee.dev"
+} else {
+  BASE_URL = "http://localhost:8080"
+}
 
 // Example token (replace with a valid token from your API)
 const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhhN2M1N2JmLTJkYTMtNGJhNC1iOGI1LWY1NWFkYTRmZTM5OSIsImlzcyI6IlRlbXBsYXRlIiwiZXhwIjoxNzQ2MjEyNDM5LCJpYXQiOjE3NDYyMDg4Mzl9.lRywBlLIhnhFsZoB5VnXK_KXCwYe44HgJWiK-kmQFYU'; // Replace with a valid JWT from your application
