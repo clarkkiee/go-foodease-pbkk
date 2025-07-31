@@ -13,7 +13,7 @@ export const options = {
 // Base URL of your API
 let BASE_URL;
 if (__ENV.ENVIRONMENT == "production") {
-  BASE_URL = "api.clarkkiee.dev"
+  BASE_URL = "https://api.clarkkiee.dev"
 } else {
   BASE_URL = "http://localhost:8080"
 }
