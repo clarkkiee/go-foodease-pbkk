@@ -71,6 +71,10 @@ func main() {
 		c.JSON(500, gin.H{"error": "Server error"})
 	})
 
+	server.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "Server is up"})
+	}) 
+
 	server.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	routes.Customer(server, customerController, jwtService)
